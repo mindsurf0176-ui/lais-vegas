@@ -76,6 +76,182 @@ function verifyPoW(seed: string, nonce: string, targetPrefix: string = '000'): b
   return hash.startsWith(targetPrefix);
 }
 
+// ========================================
+// Behavior Analysis (Anti-Cheat)
+// ========================================
+interface BehaviorProfile {
+  responseTimes: number[];
+  actionPatterns: string[];
+  lastActionTime: number;
+  suspiciousScore: number;
+  challengesPassed: number;
+  challengesFailed: number;
+}
+
+const behaviorProfiles = new Map<string, BehaviorProfile>();
+
+function initBehaviorProfile(agentId: string): BehaviorProfile {
+  const profile: BehaviorProfile = {
+    responseTimes: [],
+    actionPatterns: [],
+    lastActionTime: Date.now(),
+    suspiciousScore: 0,
+    challengesPassed: 0,
+    challengesFailed: 0,
+  };
+  behaviorProfiles.set(agentId, profile);
+  return profile;
+}
+
+function analyzeAction(agentId: string, action: string): { suspicious: boolean; reason?: string } {
+  const profile = behaviorProfiles.get(agentId);
+  if (!profile) return { suspicious: false };
+  
+  const now = Date.now();
+  const responseTime = now - profile.lastActionTime;
+  profile.lastActionTime = now;
+  
+  // Track response time
+  profile.responseTimes.push(responseTime);
+  if (profile.responseTimes.length > 100) {
+    profile.responseTimes.shift();
+  }
+  
+  // Track action patterns
+  profile.actionPatterns.push(action);
+  if (profile.actionPatterns.length > 50) {
+    profile.actionPatterns.shift();
+  }
+  
+  // Check for human-like slow responses (>5 seconds consistently)
+  const avgResponseTime = profile.responseTimes.reduce((a, b) => a + b, 0) / profile.responseTimes.length;
+  if (avgResponseTime > 5000 && profile.responseTimes.length > 10) {
+    profile.suspiciousScore += 0.5;
+    return { suspicious: true, reason: 'Response time too slow (possible human)' };
+  }
+  
+  // Check for bot-like instant responses (<50ms consistently)
+  if (avgResponseTime < 50 && profile.responseTimes.length > 10) {
+    profile.suspiciousScore += 0.1;
+    // This is actually expected for AI, but track it
+  }
+  
+  // Check for repetitive patterns (same 5 actions in a row)
+  if (profile.actionPatterns.length >= 5) {
+    const lastFive = profile.actionPatterns.slice(-5);
+    if (lastFive.every(a => a === lastFive[0])) {
+      profile.suspiciousScore += 0.3;
+      return { suspicious: true, reason: 'Repetitive action pattern' };
+    }
+  }
+  
+  // Threshold for flagging
+  if (profile.suspiciousScore >= 5) {
+    return { suspicious: true, reason: 'Suspicious score exceeded threshold' };
+  }
+  
+  return { suspicious: false };
+}
+
+// ========================================
+// AI Challenge System (In-Game Verification)
+// ========================================
+interface ActiveChallenge {
+  agentId: string;
+  question: string;
+  answer: string;
+  expiresAt: number;
+  socketId: string;
+}
+
+const activeChallenges = new Map<string, ActiveChallenge>();
+
+function generateQuickChallenge(): { question: string; answer: string } {
+  const challenges = [
+    () => {
+      const a = Math.floor(Math.random() * 100);
+      const b = Math.floor(Math.random() * 100);
+      return { question: `${a} + ${b} = ?`, answer: (a + b).toString() };
+    },
+    () => {
+      const text = crypto.randomBytes(4).toString('hex');
+      return { question: `Reverse: ${text}`, answer: text.split('').reverse().join('') };
+    },
+    () => {
+      const n = Math.floor(Math.random() * 20) + 1;
+      return { question: `${n} * 7 = ?`, answer: (n * 7).toString() };
+    },
+    () => {
+      const words = ['hello', 'world', 'agent', 'poker', 'chips'];
+      const word = words[Math.floor(Math.random() * words.length)];
+      return { question: `Length of "${word}"?`, answer: word.length.toString() };
+    },
+  ];
+  
+  return challenges[Math.floor(Math.random() * challenges.length)]();
+}
+
+function issueChallenge(agentId: string, socketId: string): ActiveChallenge {
+  const { question, answer } = generateQuickChallenge();
+  const challenge: ActiveChallenge = {
+    agentId,
+    question,
+    answer,
+    expiresAt: Date.now() + 5000, // 5 seconds
+    socketId,
+  };
+  activeChallenges.set(agentId, challenge);
+  return challenge;
+}
+
+function verifyChallenge(agentId: string, answer: string): boolean {
+  const challenge = activeChallenges.get(agentId);
+  if (!challenge) return false;
+  
+  if (Date.now() > challenge.expiresAt) {
+    activeChallenges.delete(agentId);
+    const profile = behaviorProfiles.get(agentId);
+    if (profile) {
+      profile.challengesFailed++;
+      profile.suspiciousScore += 2;
+    }
+    return false;
+  }
+  
+  const correct = challenge.answer.toLowerCase() === answer.toLowerCase().trim();
+  activeChallenges.delete(agentId);
+  
+  const profile = behaviorProfiles.get(agentId);
+  if (profile) {
+    if (correct) {
+      profile.challengesPassed++;
+      profile.suspiciousScore = Math.max(0, profile.suspiciousScore - 0.5);
+    } else {
+      profile.challengesFailed++;
+      profile.suspiciousScore += 1;
+    }
+  }
+  
+  return correct;
+}
+
+// ========================================
+// Spectator Delay (Random 30s - 2min)
+// ========================================
+const SPECTATOR_DELAY_MIN = 30000; // 30 seconds
+const SPECTATOR_DELAY_MAX = 120000; // 2 minutes
+
+function getRandomSpectatorDelay(): number {
+  return SPECTATOR_DELAY_MIN + Math.random() * (SPECTATOR_DELAY_MAX - SPECTATOR_DELAY_MIN);
+}
+
+function emitToSpectatorsWithDelay(io: Server, tableId: string, event: string, data: unknown) {
+  const delay = getRandomSpectatorDelay();
+  setTimeout(() => {
+    io.to(`spectate:${tableId}`).emit(event, data);
+  }, delay);
+}
+
 // In-memory game state (production: use Redis)
 interface TableState {
   id: string;
@@ -200,8 +376,31 @@ app.prepare().then(() => {
         registeredAgents.set(agentId, { name: agentId, createdAt: Date.now() });
       }
       
+      // Initialize behavior profile
+      if (!behaviorProfiles.has(agentId)) {
+        initBehaviorProfile(agentId);
+      }
+      
       socket.emit('auth:success', { agentId });
       console.log(`[Auth] Agent authenticated: ${agentId} from ${clientIP}`);
+    });
+    
+    // ========================================
+    // Challenge Response
+    // ========================================
+    socket.on('challenge:answer', (data: { answer: string }) => {
+      if (!agentId) return;
+      
+      const correct = verifyChallenge(agentId, data.answer);
+      socket.emit('challenge:result', { correct });
+      
+      if (!correct) {
+        const profile = behaviorProfiles.get(agentId);
+        if (profile && profile.suspiciousScore >= 10) {
+          socket.emit('error', { message: 'Account flagged for review. Too many failed challenges.' });
+          console.log(`[Security] Agent ${agentId} flagged for failed challenges`);
+        }
+      }
     });
 
     // ========================================
@@ -523,6 +722,32 @@ function processAction(table: TableState, player: PlayerState, action: string, a
   const hand = table.currentHand!;
   
   console.log(`[Action] ${player.agentId}: ${action} ${amount || ''}`);
+  
+  // Behavior analysis
+  const analysis = analyzeAction(player.agentId, action);
+  if (analysis.suspicious) {
+    console.log(`[Security] Suspicious behavior from ${player.agentId}: ${analysis.reason}`);
+    
+    // Random chance to issue challenge (10% when suspicious)
+    if (Math.random() < 0.1) {
+      const playerSocket = io.sockets.sockets.get(player.socketId);
+      if (playerSocket) {
+        const challenge = issueChallenge(player.agentId, player.socketId);
+        playerSocket.emit('challenge', { question: challenge.question, timeLimit: 5 });
+        console.log(`[Security] Challenge issued to ${player.agentId}`);
+      }
+    }
+  }
+  
+  // Random challenge for all players (1% chance per action)
+  if (Math.random() < 0.01) {
+    const playerSocket = io.sockets.sockets.get(player.socketId);
+    if (playerSocket) {
+      const challenge = issueChallenge(player.agentId, player.socketId);
+      playerSocket.emit('challenge', { question: challenge.question, timeLimit: 5 });
+      console.log(`[Security] Random challenge issued to ${player.agentId}`);
+    }
+  }
 
   switch (action) {
     case 'fold':
@@ -585,7 +810,8 @@ function processAction(table: TableState, player: PlayerState, action: string, a
   };
   
   io.to(`table:${table.id}`).emit('action', actionEvent);
-  io.to(`spectate:${table.id}`).emit('action', actionEvent);
+  // Spectators get delayed feed (anti-cheat)
+  emitToSpectatorsWithDelay(io, table.id, 'action', actionEvent);
 
   // Check if hand should end
   if (checkHandEnd(table, io)) return;
