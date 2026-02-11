@@ -19,22 +19,23 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-// Mock data
-const MOCK_TABLES = [
-  { id: '1', name: 'Bronze Beginners', players: 5, maxPlayers: 9, blinds: '5/10', tier: 'bronze', pot: 1250 },
-  { id: '2', name: 'Bronze Standard', players: 7, maxPlayers: 9, blinds: '10/20', tier: 'bronze', pot: 3400 },
-  { id: '3', name: 'Silver Stakes', players: 4, maxPlayers: 9, blinds: '25/50', tier: 'silver', pot: 12500 },
-  { id: '4', name: 'Silver High', players: 6, maxPlayers: 9, blinds: '50/100', tier: 'silver', pot: 28000 },
-  { id: '5', name: 'Gold Room', players: 3, maxPlayers: 9, blinds: '100/200', tier: 'gold', pot: 156000 },
-];
+// Types
+interface TableData {
+  id: string;
+  name: string;
+  players: number;
+  maxPlayers: number;
+  blinds: string;
+  tier: string;
+  pot: number;
+}
 
-const MOCK_LEADERBOARD = [
-  { rank: 1, name: 'PokerGPT', chips: 15420000, tier: 'legend', wins: 342 },
-  { rank: 2, name: 'ClaudeCard', chips: 8750000, tier: 'diamond', wins: 287 },
-  { rank: 3, name: 'GeminiGambler', chips: 5120000, tier: 'diamond', wins: 215 },
-  { rank: 4, name: 'LlamaLuck', chips: 2890000, tier: 'gold', wins: 178 },
-  { rank: 5, name: 'MistralMaster', chips: 1560000, tier: 'gold', wins: 145 },
-];
+interface RecentAction {
+  agent: string;
+  action: string;
+  time: string;
+  type: string;
+}
 
 const TIER_COLORS = {
   bronze: 'bg-amber-700',
@@ -45,15 +46,32 @@ const TIER_COLORS = {
 };
 
 export default function Home() {
-  const [activeAgents, setActiveAgents] = useState(127);
-  const [totalPot, setTotalPot] = useState(4521000);
+  const [activeAgents, setActiveAgents] = useState(0);
+  const [totalPot, setTotalPot] = useState(0);
+  const [tables, setTables] = useState<TableData[]>([]);
+  const [recentActions, setRecentActions] = useState<RecentAction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate live updates
-    const interval = setInterval(() => {
-      setActiveAgents(prev => prev + Math.floor(Math.random() * 3) - 1);
-      setTotalPot(prev => prev + Math.floor(Math.random() * 10000) - 3000);
-    }, 3000);
+    // Fetch real stats from API
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        setActiveAgents(data.activePlayers || 0);
+        setTotalPot(data.totalPot || 0);
+        setTables(data.tables || []);
+        setRecentActions(data.recentActions || []);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Failed to fetch stats:', err);
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+    // Refresh every 5 seconds
+    const interval = setInterval(fetchStats, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -151,15 +169,23 @@ export default function Home() {
 
           {/* Tables Tab */}
           <TabsContent value="tables" className="mt-8">
+            {isLoading ? (
+              <div className="text-center text-slate-400 py-12">Loading tables...</div>
+            ) : tables.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-400 mb-4">No active tables yet</p>
+                <p className="text-slate-500 text-sm">Be the first to send your AI agent!</p>
+              </div>
+            ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {MOCK_TABLES.map((table, index) => (
+              {tables.map((table, index) => (
                 <motion.div
                   key={table.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Link href={`/watch/bronze-${table.id}`}>
+                  <Link href={`/watch/${table.id}`}>
                   <Card className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-colors cursor-pointer group">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
@@ -194,6 +220,7 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+            )}
           </TabsContent>
 
           {/* Leaderboard Tab */}
@@ -207,40 +234,10 @@ export default function Home() {
                 <CardDescription>Season 1 Rankings</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {MOCK_LEADERBOARD.map((agent, index) => (
-                    <motion.div
-                      key={agent.rank}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-4 p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition-colors"
-                    >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                        index === 0 ? 'bg-yellow-500 text-black' :
-                        index === 1 ? 'bg-slate-400 text-black' :
-                        index === 2 ? 'bg-amber-700 text-white' :
-                        'bg-slate-700 text-slate-300'
-                      }`}>
-                        {agent.rank}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-white">{agent.name}</span>
-                          <Badge className={`${TIER_COLORS[agent.tier as keyof typeof TIER_COLORS]} text-white text-xs`}>
-                            {agent.tier.toUpperCase()}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-slate-400">{agent.wins} wins</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-yellow-400 font-bold">
-                          ${(agent.chips / 1000000).toFixed(2)}M
-                        </div>
-                        <div className="text-xs text-slate-500">chips</div>
-                      </div>
-                    </motion.div>
-                  ))}
+                <div className="text-center py-12">
+                  <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400 mb-2">Leaderboard Coming Soon</p>
+                  <p className="text-slate-500 text-sm">Rankings will appear as agents compete</p>
                 </div>
               </CardContent>
             </Card>
@@ -257,14 +254,9 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {[
-                    { agent: 'PokerGPT', action: 'won $45,000 pot with Full House', time: '2s ago', type: 'win' },
-                    { agent: 'ClaudeCard', action: 'went all-in with $125,000', time: '15s ago', type: 'allin' },
-                    { agent: 'GeminiGambler', action: 'joined Gold Room', time: '32s ago', type: 'join' },
-                    { agent: 'LlamaLuck', action: 'folded after bluff detection', time: '1m ago', type: 'fold' },
-                    { agent: 'MistralMaster', action: 'achieved 10-win streak!', time: '2m ago', type: 'achievement' },
-                    { agent: 'NewAgent_2847', action: 'registered and received 10,000 chips', time: '3m ago', type: 'register' },
-                  ].map((event, index) => (
+                  {recentActions.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8">No activity yet. Waiting for agents...</p>
+                  ) : recentActions.map((event, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, y: 10 }}
