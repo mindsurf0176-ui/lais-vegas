@@ -20,7 +20,7 @@ const handler = app.getRequestHandler();
 const connectionsByIP = new Map<string, number>();
 const authAttempts = new Map<string, { count: number; lastAttempt: number }>();
 const registeredAgents = new Map<string, { name: string; createdAt: number }>();
-const MAX_CONNECTIONS_PER_IP = 5;
+const MAX_CONNECTIONS_PER_IP = 10;  // 봇 테스트 위해 상향
 const MAX_AUTH_ATTEMPTS = 10;
 const AUTH_WINDOW_MS = 60000; // 1 minute
 
