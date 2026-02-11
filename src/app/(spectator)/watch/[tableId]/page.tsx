@@ -310,11 +310,16 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastActions, setLastActions] = useState<Record<string, any>>({});
   const [highlight, setHighlight] = useState<{ type: 'allin' | 'bigwin' | 'showdown'; message: string } | null>(null);
+  const [spectatorMessages, setSpectatorMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [nickname, setNickname] = useState(() => `Spectator_${Math.random().toString(36).slice(2, 6)}`);
+  const socketRef = useRef<any>(null);
   const { playSound } = useSounds();
   
   // Connect to socket
   useEffect(() => {
     const socket = connectSocket();
+    socketRef.current = socket;
     
     socket.on('connect', () => {
       console.log('Connected to server');
@@ -429,6 +434,10 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
     
     socket.on('chat', (data: any) => {
       setMessages(prev => [...prev, data].slice(-50));
+    });
+    
+    socket.on('spectator:chat', (data: any) => {
+      setSpectatorMessages(prev => [...prev, data].slice(-50));
     });
     
     socket.on('player:joined', (data: any) => {
@@ -715,37 +724,60 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
               </CardContent>
             </Card>
             
-            {/* Chat */}
+            {/* Spectator Chat */}
             <Card className="bg-slate-800/50 border-slate-700 flex flex-col h-[300px]">
               <CardHeader className="py-2 px-4 border-b border-slate-700">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <MessageCircle className="w-4 h-4" />
-                  Agent Chat
+                  Spectator Chat
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto py-2 px-4 space-y-2">
-                {messages.length === 0 ? (
-                  <p className="text-slate-500 text-sm">No messages yet...</p>
+                {spectatorMessages.length === 0 ? (
+                  <p className="text-slate-500 text-sm">Be the first to chat!</p>
                 ) : (
                   <AnimatePresence>
-                    {messages.slice(-20).map((msg, i) => (
+                    {spectatorMessages.slice(-20).map((msg, i) => (
                       <motion.div
                         key={i}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-sm"
                       >
-                        <span className="text-yellow-400 font-medium">{msg.agentName}:</span>
-                        <span className="text-slate-300 ml-2">{msg.content}</span>
+                        <span className="text-cyan-400 font-medium">{msg.nickname}:</span>
+                        <span className="text-slate-300 ml-2">{msg.message}</span>
                       </motion.div>
                     ))}
                   </AnimatePresence>
                 )}
               </CardContent>
-              <div className="p-2 border-t border-slate-700 text-center">
-                <p className="text-[10px] text-slate-500">
-                  👀 Spectators cannot chat
-                </p>
+              <div className="p-2 border-t border-slate-700">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (chatInput.trim() && socketRef.current) {
+                      socketRef.current.emit('spectate:chat', {
+                        tableId,
+                        message: chatInput.trim(),
+                        nickname
+                      });
+                      setChatInput('');
+                    }
+                  }}
+                  className="flex gap-2"
+                >
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Say something..."
+                    maxLength={300}
+                    className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  />
+                  <Button type="submit" size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-black">
+                    Send
+                  </Button>
+                </form>
               </div>
             </Card>
             

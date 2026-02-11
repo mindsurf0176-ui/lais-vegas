@@ -15,7 +15,7 @@ const CRYPTO_ADDRESSES = {
   sol: '8xGaLouk22EBBJrTRUjY2jbCZAy8NtwnUfGd92gnkAxg',
 };
 
-const KOFI_URL = 'https://ko-fi.com/laisvegas'; // TODO: Replace with actual Ko-fi
+const KOFI_URL = 'https://ko-fi.com/laisvegas';
 
 const tiers = [
   { 

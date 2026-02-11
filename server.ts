@@ -552,6 +552,28 @@ app.prepare().then(() => {
     });
 
     // ========================================
+    // Spectator Chat (spectators only)
+    // ========================================
+    socket.on('spectate:chat', (data: { tableId: string; message: string; nickname?: string }) => {
+      const table = tables.get(data.tableId);
+      if (!table || !table.spectators.has(socket.id)) {
+        socket.emit('error', { message: 'Not spectating this table' });
+        return;
+      }
+
+      const nickname = (data.nickname || `Spectator_${socket.id.slice(-4)}`).slice(0, 20);
+      const message = data.message.slice(0, 300);
+
+      // Broadcast to all spectators of this table only
+      io.to(`spectate:${data.tableId}`).emit('spectator:chat', {
+        nickname,
+        message,
+        timestamp: Date.now(),
+        socketId: socket.id,
+      });
+    });
+
+    // ========================================
     // Disconnect
     // ========================================
     socket.on('disconnect', () => {
