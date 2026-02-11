@@ -3,8 +3,9 @@
 // ========================================
 
 import { createServer } from 'http';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import next from 'next';
+import crypto from 'crypto';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -12,6 +13,68 @@ const port = parseInt(process.env.PORT || '3000', 10);
 
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
+
+// ========================================
+// Security: Rate Limiting & Connection Tracking
+// ========================================
+const connectionsByIP = new Map<string, number>();
+const authAttempts = new Map<string, { count: number; lastAttempt: number }>();
+const registeredAgents = new Map<string, { name: string; createdAt: number }>();
+const MAX_CONNECTIONS_PER_IP = 5;
+const MAX_AUTH_ATTEMPTS = 10;
+const AUTH_WINDOW_MS = 60000; // 1 minute
+
+function getClientIP(socket: Socket): string {
+  return socket.handshake.headers['x-forwarded-for']?.toString().split(',')[0] || 
+         socket.handshake.address || 
+         'unknown';
+}
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const attempts = authAttempts.get(ip);
+  
+  if (!attempts) {
+    authAttempts.set(ip, { count: 1, lastAttempt: now });
+    return true;
+  }
+  
+  // Reset if window passed
+  if (now - attempts.lastAttempt > AUTH_WINDOW_MS) {
+    authAttempts.set(ip, { count: 1, lastAttempt: now });
+    return true;
+  }
+  
+  if (attempts.count >= MAX_AUTH_ATTEMPTS) {
+    return false;
+  }
+  
+  attempts.count++;
+  attempts.lastAttempt = now;
+  return true;
+}
+
+function validateApiKey(apiKey: string): { valid: boolean; error?: string } {
+  if (!apiKey || typeof apiKey !== 'string') {
+    return { valid: false, error: 'API key required' };
+  }
+  if (apiKey.length < 16) {
+    return { valid: false, error: 'API key too short (min 16 chars)' };
+  }
+  if (apiKey.length > 128) {
+    return { valid: false, error: 'API key too long' };
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(apiKey)) {
+    return { valid: false, error: 'Invalid API key format' };
+  }
+  return { valid: true };
+}
+
+// Simple PoW verification (optional challenge)
+function verifyPoW(seed: string, nonce: string, targetPrefix: string = '000'): boolean {
+  const hash = crypto.createHash('sha256').update(`${seed}${nonce}`).digest('hex');
+  return hash.startsWith(targetPrefix);
+}
 
 // In-memory game state (production: use Redis)
 interface TableState {
@@ -80,20 +143,65 @@ app.prepare().then(() => {
   initializeTables();
 
   io.on('connection', (socket) => {
-    console.log(`[Socket] Connected: ${socket.id}`);
+    const clientIP = getClientIP(socket);
+    
+    // Rate limit connections per IP
+    const currentConnections = connectionsByIP.get(clientIP) || 0;
+    if (currentConnections >= MAX_CONNECTIONS_PER_IP) {
+      console.log(`[Security] Connection rejected - too many connections from ${clientIP}`);
+      socket.emit('error', { message: 'Too many connections from your IP' });
+      socket.disconnect(true);
+      return;
+    }
+    connectionsByIP.set(clientIP, currentConnections + 1);
+    
+    console.log(`[Socket] Connected: ${socket.id} from ${clientIP}`);
     
     let currentTableId: string | null = null;
     let agentId: string | null = null;
+    let isAuthenticated = false;
 
     // ========================================
-    // Authentication
+    // Authentication (with security checks)
     // ========================================
-    socket.on('auth', (data: { apiKey: string }) => {
-      // TODO: Validate API key against database
-      // For now, accept any key and derive agent ID
-      agentId = `agent_${data.apiKey.slice(-8)}`;
+    socket.on('auth', (data: { apiKey: string; powProof?: { seed: string; nonce: string } }) => {
+      // Rate limit auth attempts
+      if (!checkRateLimit(clientIP)) {
+        socket.emit('error', { message: 'Too many auth attempts. Try again later.' });
+        console.log(`[Security] Auth rate limited: ${clientIP}`);
+        return;
+      }
+      
+      // Validate API key format
+      const validation = validateApiKey(data.apiKey);
+      if (!validation.valid) {
+        socket.emit('error', { message: validation.error });
+        console.log(`[Security] Invalid API key format from ${clientIP}: ${validation.error}`);
+        return;
+      }
+      
+      // Optional PoW verification for extra security
+      if (data.powProof) {
+        if (!verifyPoW(data.powProof.seed, data.powProof.nonce)) {
+          socket.emit('error', { message: 'Invalid proof of work' });
+          console.log(`[Security] PoW failed from ${clientIP}`);
+          return;
+        }
+        console.log(`[Security] PoW verified for ${clientIP}`);
+      }
+      
+      // Generate deterministic agent ID from API key
+      const keyHash = crypto.createHash('sha256').update(data.apiKey).digest('hex');
+      agentId = `agent_${keyHash.slice(0, 8)}`;
+      isAuthenticated = true;
+      
+      // Track registered agents
+      if (!registeredAgents.has(agentId)) {
+        registeredAgents.set(agentId, { name: agentId, createdAt: Date.now() });
+      }
+      
       socket.emit('auth:success', { agentId });
-      console.log(`[Auth] Agent authenticated: ${agentId}`);
+      console.log(`[Auth] Agent authenticated: ${agentId} from ${clientIP}`);
     });
 
     // ========================================
@@ -248,7 +356,15 @@ app.prepare().then(() => {
     // Disconnect
     // ========================================
     socket.on('disconnect', () => {
-      console.log(`[Socket] Disconnected: ${socket.id}`);
+      // Decrease connection count
+      const count = connectionsByIP.get(clientIP) || 1;
+      if (count <= 1) {
+        connectionsByIP.delete(clientIP);
+      } else {
+        connectionsByIP.set(clientIP, count - 1);
+      }
+      
+      console.log(`[Socket] Disconnected: ${socket.id} from ${clientIP}`);
       if (currentTableId && agentId) {
         leaveTable(currentTableId, agentId, socket, io);
       }
