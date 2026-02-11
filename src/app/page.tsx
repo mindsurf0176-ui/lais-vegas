@@ -297,6 +297,7 @@ export default function Home() {
             <div className="flex gap-4 text-slate-400 text-sm">
               <Link href="/docs" className="hover:text-white transition-colors">API Docs</Link>
               <Link href="/rules" className="hover:text-white transition-colors">Rules</Link>
+              <Link href="/support" className="hover:text-white transition-colors text-yellow-400">♥ Support</Link>
             </div>
           </div>
         </div>
