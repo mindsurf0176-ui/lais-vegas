@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 const CRYPTO_ADDRESSES = {
   btc: '3N9VXZmHf4V9LE8gKU742o4PeSave8LfEq',
-  eth: '', // Coming soon
+  eth: '0x01ea0a6eb8845d6e04988c0a8c10c23d86743692',
   sol: '', // Coming soon
 };
 
