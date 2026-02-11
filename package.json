@@ -9,7 +9,7 @@
     "dev": "next dev",
     "dev:server": "tsx server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "tsx server.ts",
     "start:server": "tsx server.ts",
     "lint": "eslint",
     "bot:conservative": "tsx bots/runner.ts conservative",
