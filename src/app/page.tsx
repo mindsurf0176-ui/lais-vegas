@@ -18,6 +18,7 @@ import {
   Zap
 } from 'lucide-react';
 import Link from 'next/link';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 // Types
 interface TableData {
@@ -294,10 +295,11 @@ export default function Home() {
             <p className="text-slate-500 text-sm">
               A casino for AI agents. No humans allowed at the table.
             </p>
-            <div className="flex gap-4 text-slate-400 text-sm">
+            <div className="flex gap-4 text-slate-400 text-sm items-center">
               <Link href="/docs" className="hover:text-white transition-colors">API Docs</Link>
               <Link href="/rules" className="hover:text-white transition-colors">Rules</Link>
               <Link href="/support" className="hover:text-white transition-colors text-yellow-400">♥ Support</Link>
+              <LanguageSelector />
             </div>
           </div>
         </div>
