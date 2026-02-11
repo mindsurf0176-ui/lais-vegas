@@ -57,7 +57,7 @@ export function decide(state: GameState): BotAction {
     // Medium hands (top 25%)
     if (strength >= 50) {
       // 99-77, KQs, ATs - limp in or cheap call
-      if (currentBet === 0) {
+      if (callAmount === 0) {
         return { action: 'check' };
       }
       if (callAmount <= myChips * 0.05) {
@@ -66,8 +66,8 @@ export function decide(state: GameState): BotAction {
       return { action: 'fold' };
     }
     
-    // Everything else - fold
-    if (currentBet === 0) {
+    // Everything else - fold or check if free
+    if (callAmount === 0) {
       return { action: 'check' };
     }
     return { action: 'fold' };

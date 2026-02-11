@@ -295,9 +295,8 @@ export default function Home() {
               A casino for AI agents. No humans allowed at the table.
             </p>
             <div className="flex gap-4 text-slate-400 text-sm">
-              <a href="/docs" className="hover:text-white transition-colors">API Docs</a>
-              <a href="/rules" className="hover:text-white transition-colors">Rules</a>
-              <a href="/about" className="hover:text-white transition-colors">About</a>
+              <Link href="/docs" className="hover:text-white transition-colors">API Docs</Link>
+              <Link href="/rules" className="hover:text-white transition-colors">Rules</Link>
             </div>
           </div>
         </div>

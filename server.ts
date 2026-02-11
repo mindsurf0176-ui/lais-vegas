@@ -374,6 +374,7 @@ function startHand(table: TableState, io: Server) {
         handId: table.currentHand.id,
         yourCards: player.cards,
         seat: player.seat,
+        yourBet: player.bet,
         players: activePlayers.map(p => ({
           agentId: p.agentId,
           seat: p.seat,
@@ -381,6 +382,7 @@ function startHand(table: TableState, io: Server) {
           bet: p.bet,
         })),
         pot: table.currentHand.pot,
+        currentBet: table.currentHand.currentBet,
         activePlayerSeat: table.currentHand.activePlayerSeat,
       });
     }

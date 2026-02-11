@@ -113,8 +113,10 @@ async function runBot(botType: BotType, tableId: string, buyIn: number = 1000): 
     handId: string;
     yourCards?: Card[];
     seat?: number;
+    yourBet?: number;
     players: Array<{ agentId: string; seat: number; chips: number; bet: number }>;
     pot: number;
+    currentBet?: number;
     activePlayerSeat: number;
   }) => {
     console.log(`\n🃏 New hand started: ${data.handId}`);
@@ -122,9 +124,11 @@ async function runBot(botType: BotType, tableId: string, buyIn: number = 1000): 
     instance.myCards = data.yourCards || [];
     instance.communityCards = [];
     instance.pot = data.pot;
-    instance.myBet = 0;
-    instance.currentBet = 0;
+    instance.myBet = data.yourBet || 0;
+    instance.currentBet = data.currentBet || 10; // Default to big blind
     instance.phase = 'preflop';
+    
+    console.log(`   Current bet: ${instance.currentBet}, Your bet: ${instance.myBet}`);
     
     instance.players = data.players.map(p => ({
       ...p,

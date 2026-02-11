@@ -47,7 +47,7 @@ export function decide(state: GameState): BotAction {
     
     // Strong (top 15%) - Raise 70%, Call 30%
     if (strength >= 65) {
-      if (currentBet === 0) {
+      if (callAmount === 0) {
         return { action: 'raise', amount: Math.min(25, myChips) };
       }
       if (callAmount <= myChips * 0.12) {
@@ -60,7 +60,7 @@ export function decide(state: GameState): BotAction {
     
     // Playable (top 30%) - Raise 30%, Call 50%, Fold 20%
     if (strength >= 45) {
-      if (currentBet === 0) {
+      if (callAmount === 0) {
         return mix > 0.5 
           ? { action: 'raise', amount: Math.min(20, myChips) }
           : { action: 'check' };
@@ -75,7 +75,7 @@ export function decide(state: GameState): BotAction {
     
     // Marginal (top 50%) - Occasional defend
     if (strength >= 30) {
-      if (currentBet === 0) {
+      if (callAmount === 0) {
         return { action: 'check' };
       }
       if (callAmount <= myChips * 0.04 && mix > 0.6) {
@@ -85,10 +85,10 @@ export function decide(state: GameState): BotAction {
     }
     
     // Junk - Fold (but occasional steal in position)
-    if (currentBet === 0 && activePlayers <= 2 && mix > 0.8) {
+    if (callAmount === 0 && activePlayers <= 2 && mix > 0.8) {
       return { action: 'raise', amount: Math.min(25, myChips) };
     }
-    if (currentBet === 0) {
+    if (callAmount === 0) {
       return { action: 'check' };
     }
     return { action: 'fold' };

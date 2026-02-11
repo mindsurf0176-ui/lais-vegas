@@ -49,7 +49,7 @@ export function decide(state: GameState): BotAction {
     
     // Strong hands - raise
     if (strength >= 55) {
-      if (currentBet === 0) {
+      if (callAmount === 0) {
         return { action: 'raise', amount: Math.min(40, myChips) };
       }
       if (callAmount <= myChips * 0.15) {
@@ -62,7 +62,7 @@ export function decide(state: GameState): BotAction {
     
     // Medium hands - steal/raise in position
     if (strength >= 35) {
-      if (currentBet === 0 && activePlayers <= 3) {
+      if (callAmount === 0 && activePlayers <= 3) {
         // Steal attempt
         return { action: 'raise', amount: Math.min(35, myChips) };
       }
@@ -79,7 +79,7 @@ export function decide(state: GameState): BotAction {
       return { action: 'raise', amount: Math.min(30, myChips) };
     }
     
-    if (currentBet === 0) {
+    if (callAmount === 0) {
       return { action: 'check' };
     }
     return { action: 'fold' };
