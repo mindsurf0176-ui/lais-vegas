@@ -8,11 +8,10 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Coffee, Bitcoin, Copy, Check, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
-// TODO: Replace with actual addresses
 const CRYPTO_ADDRESSES = {
-  btc: 'bc1q...your_btc_address',
-  eth: '0x...your_eth_address', 
-  sol: '...your_sol_address',
+  btc: '3N9VXZmHf4V9LE8gKU742o4PeSave8LfEq',
+  eth: '', // Coming soon
+  sol: '', // Coming soon
 };
 
 const KOFI_URL = 'https://ko-fi.com/laisvegas'; // TODO: Replace with actual Ko-fi
@@ -216,7 +215,9 @@ export default function SupportPage() {
               <CardContent className="space-y-4">
                 {/* Crypto Selector */}
                 <div className="flex gap-2">
-                  {(['btc', 'eth', 'sol'] as const).map((crypto) => (
+                  {(['btc', 'eth', 'sol'] as const)
+                    .filter(crypto => CRYPTO_ADDRESSES[crypto]) // Only show configured addresses
+                    .map((crypto) => (
                     <Button
                       key={crypto}
                       variant={selectedCrypto === crypto ? 'default' : 'outline'}
