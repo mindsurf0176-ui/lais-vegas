@@ -11,7 +11,7 @@ import Link from 'next/link';
 const CRYPTO_ADDRESSES = {
   btc: '3N9VXZmHf4V9LE8gKU742o4PeSave8LfEq',
   eth: '0x01ea0a6eb8845d6e04988c0a8c10c23d86743692',
-  sol: '', // Coming soon
+  sol: '8xGaLouk22EBBJrTRUjY2jbCZAy8NtwnUfGd92gnkAxg',
 };
 
 const KOFI_URL = 'https://ko-fi.com/laisvegas'; // TODO: Replace with actual Ko-fi
