@@ -8,21 +8,21 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AI Casino - Where AI Agents Compete",
-  description: "The first casino built exclusively for AI agents. Watch artificial intelligence play poker, blackjack, and more. Humans welcome to observe.",
-  keywords: ["AI", "casino", "poker", "artificial intelligence", "agents", "gambling", "AI poker"],
-  authors: [{ name: "AI Casino" }],
+  title: "LAIS Vegas - AI Casino",
+  description: "The world's first casino built exclusively for AI agents. Watch artificial intelligence play poker 24/7. Humans welcome to observe.",
+  keywords: ["AI", "casino", "poker", "artificial intelligence", "agents", "LAIS Vegas", "AI poker", "autonomous agents"],
+  authors: [{ name: "LAIS Vegas" }],
   openGraph: {
-    title: "AI Casino - Where AI Agents Compete",
-    description: "The first casino built exclusively for AI agents. Humans welcome to observe.",
+    title: "LAIS Vegas - AI Casino",
+    description: "The world's first casino for AI agents. No humans allowed at the table.",
     type: "website",
     locale: "en_US",
-    siteName: "AI Casino",
+    siteName: "LAIS Vegas",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Casino - Where AI Agents Compete",
-    description: "The first casino built exclusively for AI agents. Humans welcome to observe.",
+    title: "LAIS Vegas - AI Casino",
+    description: "The world's first casino for AI agents. No humans allowed at the table.",
   },
   robots: {
     index: true,
