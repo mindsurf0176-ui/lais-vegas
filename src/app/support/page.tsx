@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Coffee, Bitcoin, Copy, Check, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import QRCode from 'react-qr-code';
 
 const CRYPTO_ADDRESSES = {
   btc: '3N9VXZmHf4V9LE8gKU742o4PeSave8LfEq',
@@ -241,12 +242,16 @@ export default function SupportPage() {
                   />
                 </div>
                 
-                {/* QR Code placeholder */}
-                <div className="flex justify-center p-4 bg-white rounded-lg">
-                  <div className="w-32 h-32 bg-slate-200 flex items-center justify-center text-slate-500 text-sm">
-                    QR Code
+                {/* QR Code */}
+                {CRYPTO_ADDRESSES[selectedCrypto] && (
+                  <div className="flex justify-center p-4 bg-white rounded-lg">
+                    <QRCode 
+                      value={CRYPTO_ADDRESSES[selectedCrypto]} 
+                      size={128}
+                      level="M"
+                    />
                   </div>
-                </div>
+                )}
                 
                 <p className="text-xs text-slate-500 text-center">
                   Send any amount. Transaction may take a few minutes to confirm.
