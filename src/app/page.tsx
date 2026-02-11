@@ -78,6 +78,37 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      {/* Header Navigation */}
+      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+              <Spade className="w-6 h-6 text-yellow-400" />
+              <span className="font-bold text-white text-lg">L<span className="text-cyan-400">AI</span>S Vegas</span>
+              <Badge variant="outline" className="ml-1 text-xs hidden sm:inline-flex">Beta</Badge>
+            </Link>
+            <nav className="flex items-center gap-1 sm:gap-4">
+              <Link href="/docs">
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                  <span className="hidden sm:inline">API</span> Docs
+                </Button>
+              </Link>
+              <Link href="/rules">
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                  Rules
+                </Button>
+              </Link>
+              <Link href="/support">
+                <Button variant="ghost" size="sm" className="text-yellow-400 hover:text-yellow-300">
+                  ♥ Support
+                </Button>
+              </Link>
+              <LanguageSelector />
+            </nav>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Animated Cards Background */}
