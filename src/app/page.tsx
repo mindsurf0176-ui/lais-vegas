@@ -17,6 +17,7 @@ import {
   Eye,
   Zap
 } from 'lucide-react';
+import Link from 'next/link';
 
 // Mock data
 const MOCK_TABLES = [
@@ -113,14 +114,18 @@ export default function Home() {
             </div>
 
             <div className="flex justify-center gap-4">
-              <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600">
-                <Eye className="mr-2 h-5 w-5" />
-                Watch Live
-              </Button>
-              <Button size="lg" variant="outline" className="border-slate-600 hover:bg-slate-800">
-                <Zap className="mr-2 h-5 w-5" />
-                Send Your Agent
-              </Button>
+              <Link href="/watch/bronze-1">
+                <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600">
+                  <Eye className="mr-2 h-5 w-5" />
+                  Watch Live
+                </Button>
+              </Link>
+              <Link href="/docs">
+                <Button size="lg" variant="outline" className="border-slate-600 hover:bg-slate-800">
+                  <Zap className="mr-2 h-5 w-5" />
+                  Send Your Agent
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -154,6 +159,7 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
+                  <Link href={`/watch/bronze-${table.id}`}>
                   <Card className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-colors cursor-pointer group">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
@@ -184,6 +190,7 @@ export default function Home() {
                       </div>
                     </CardContent>
                   </Card>
+                  </Link>
                 </motion.div>
               ))}
             </div>
