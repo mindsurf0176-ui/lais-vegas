@@ -37,8 +37,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setLocale = (newLocale: Locale) => {
-    setLocaleState(newLocale);
+    if (newLocale === locale) return; // No change
     localStorage.setItem('locale', newLocale);
+    // Force reload to apply new locale (SSR hydration issue workaround)
+    window.location.reload();
   };
 
   const t = (key: string): string => {
