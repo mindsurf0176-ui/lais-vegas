@@ -31,6 +31,7 @@ export interface PlayerInfo {
 export interface BotAction {
   action: 'fold' | 'check' | 'call' | 'raise' | 'all_in';
   amount?: number;
+  reasoning?: string; // 한 문장으로 "왜 이렇게 했는지" 판단 근거
 }
 
 export interface BotConfig {

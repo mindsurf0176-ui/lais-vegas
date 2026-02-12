@@ -25,55 +25,153 @@ import { connectSocket, disconnectSocket } from '@/lib/socket';
 import { useTranslation } from '@/i18n/context';
 
 // ========================================
-// Sound Effects
+// Sound Effects - Casino Style 🎰
 // ========================================
 const useSounds = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   
-  const playSound = useCallback((type: 'chip' | 'card' | 'win' | 'allin' | 'fold') => {
-    if (!audioContextRef.current) {
+  const getContext = useCallback(() => {
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
       audioContextRef.current = new AudioContext();
     }
-    const ctx = audioContextRef.current;
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    // Different sounds for different actions
-    switch (type) {
-      case 'chip':
-        oscillator.frequency.value = 800;
-        gainNode.gain.value = 0.1;
-        oscillator.type = 'sine';
-        break;
-      case 'card':
-        oscillator.frequency.value = 400;
-        gainNode.gain.value = 0.05;
-        oscillator.type = 'triangle';
-        break;
-      case 'win':
-        oscillator.frequency.value = 600;
-        gainNode.gain.value = 0.15;
-        oscillator.type = 'sine';
-        break;
-      case 'allin':
-        oscillator.frequency.value = 300;
-        gainNode.gain.value = 0.2;
-        oscillator.type = 'sawtooth';
-        break;
-      case 'fold':
-        oscillator.frequency.value = 200;
-        gainNode.gain.value = 0.05;
-        oscillator.type = 'sine';
-        break;
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
     }
-    
-    oscillator.start();
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    oscillator.stop(ctx.currentTime + 0.3);
+    return audioContextRef.current;
   }, []);
+  
+  const playChipSound = useCallback(() => {
+    const ctx = getContext();
+    // Multiple chips falling - layered sound
+    [0, 0.05, 0.1].forEach((delay, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        filter.type = 'highpass';
+        filter.frequency.value = 2000 + Math.random() * 1000;
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.frequency.value = 3000 + Math.random() * 2000;
+        osc.type = 'square';
+        gain.gain.value = 0.03;
+        
+        osc.start(ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.stop(ctx.currentTime + 0.08);
+      }, delay * 1000);
+    });
+  }, [getContext]);
+  
+  const playCardSound = useCallback(() => {
+    const ctx = getContext();
+    // Card swoosh
+    const noise = ctx.createBufferSource();
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    }
+    noise.buffer = noiseBuffer;
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1500;
+    filter.Q.value = 0.5;
+    
+    const gain = ctx.createGain();
+    gain.gain.value = 0.08;
+    
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    
+    noise.start();
+  }, [getContext]);
+  
+  const playWinSound = useCallback(() => {
+    const ctx = getContext();
+    // Victory fanfare - ascending notes
+    const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.value = 0.1;
+        
+        osc.start(ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.stop(ctx.currentTime + 0.3);
+      }, i * 100);
+    });
+  }, [getContext]);
+  
+  const playAllinSound = useCallback(() => {
+    const ctx = getContext();
+    // Dramatic tension - low rumble + high accent
+    const bass = ctx.createOscillator();
+    const bassGain = ctx.createGain();
+    bass.connect(bassGain);
+    bassGain.connect(ctx.destination);
+    bass.frequency.value = 80;
+    bass.type = 'sawtooth';
+    bassGain.gain.value = 0.15;
+    bass.start(ctx.currentTime);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    bass.stop(ctx.currentTime + 0.5);
+    
+    // High accent
+    setTimeout(() => {
+      const high = ctx.createOscillator();
+      const highGain = ctx.createGain();
+      high.connect(highGain);
+      highGain.connect(ctx.destination);
+      high.frequency.value = 880;
+      high.type = 'triangle';
+      highGain.gain.value = 0.08;
+      high.start(ctx.currentTime);
+      highGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      high.stop(ctx.currentTime + 0.2);
+    }, 100);
+  }, [getContext]);
+  
+  const playFoldSound = useCallback(() => {
+    const ctx = getContext();
+    // Soft thud
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.frequency.value = 150;
+    osc.type = 'sine';
+    gain.gain.value = 0.06;
+    
+    osc.start(ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.stop(ctx.currentTime + 0.15);
+  }, [getContext]);
+  
+  const playSound = useCallback((type: 'chip' | 'card' | 'win' | 'allin' | 'fold') => {
+    switch (type) {
+      case 'chip': playChipSound(); break;
+      case 'card': playCardSound(); break;
+      case 'win': playWinSound(); break;
+      case 'allin': playAllinSound(); break;
+      case 'fold': playFoldSound(); break;
+    }
+  }, [playChipSound, playCardSound, playWinSound, playAllinSound, playFoldSound]);
   
   return { playSound };
 };

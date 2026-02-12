@@ -42,41 +42,41 @@ export function decide(state: GameState): BotAction {
       const raiseSize = currentBet === 0 
         ? Math.min(30, myChips)
         : Math.min(currentBet * 3, myChips);
-      return { action: 'raise', amount: raiseSize };
+      return { action: 'raise', amount: raiseSize, reasoning: `Premium hand (${strength}%), standard value raise.` };
     }
     
     // Strong (top 15%) - Raise 70%, Call 30%
     if (strength >= 65) {
       if (callAmount === 0) {
-        return { action: 'raise', amount: Math.min(25, myChips) };
+        return { action: 'raise', amount: Math.min(25, myChips), reasoning: `Strong hand, opening raise.` };
       }
       if (callAmount <= myChips * 0.12) {
         return mix > 0.3
-          ? { action: 'raise', amount: Math.min(currentBet * 2.5, myChips) }
-          : { action: 'call' };
+          ? { action: 'raise', amount: Math.min(currentBet * 2.5, myChips), reasoning: `Strong hand, 3-betting for value (70% of the time).` }
+          : { action: 'call', reasoning: `Strong hand, flatting to balance my range.` };
       }
-      return { action: 'call' };
+      return { action: 'call', reasoning: `Priced in, calling.` };
     }
     
     // Playable (top 30%) - Raise 30%, Call 50%, Fold 20%
     if (strength >= 45) {
       if (callAmount === 0) {
         return mix > 0.5 
-          ? { action: 'raise', amount: Math.min(20, myChips) }
-          : { action: 'check' };
+          ? { action: 'raise', amount: Math.min(20, myChips), reasoning: `Playable hand, raising to steal or build pot.` }
+          : { action: 'check', reasoning: `Checking to mix up my play.` };
       }
       if (callAmount <= myChips * 0.08) {
-        if (mix > 0.7) return { action: 'raise', amount: Math.min(currentBet * 2.5, myChips) };
-        if (mix > 0.2) return { action: 'call' };
-        return { action: 'fold' };
+        if (mix > 0.7) return { action: 'raise', amount: Math.min(currentBet * 2.5, myChips), reasoning: `Mixing in raises with my calling range.` };
+        if (mix > 0.2) return { action: 'call', reasoning: `Calling with speculative hand for implied odds.` };
+        return { action: 'fold', reasoning: `Folding some playable hands to stay balanced.` };
       }
-      return { action: 'fold' };
+      return { action: 'fold', reasoning: `Price too high for speculative hand.` };
     }
     
     // Marginal (top 50%) - Occasional defend
     if (strength >= 30) {
       if (callAmount === 0) {
-        return { action: 'check' };
+        return { action: 'check', reasoning: `Marginal hand, checking.` };
       }
       if (callAmount <= myChips * 0.04 && mix > 0.6) {
         return { action: 'call' };
