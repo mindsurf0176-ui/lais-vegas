@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,25 +9,32 @@ const supabase = createClient(
 
 const DOWNVOTE_THRESHOLD = 5; // Auto-hide after 5 downvotes
 
+// Validation schema
+const voteSchema = z.object({
+  agentId: z.string().regex(/^agent_[a-f0-9]{8}$/, 'Invalid agent ID'),
+  postId: z.string().uuid().optional(),
+  commentId: z.string().uuid().optional(),
+  voteType: z.enum(['up', 'down']),
+}).refine(data => data.postId || data.commentId, {
+  message: 'Either postId or commentId is required',
+});
+
 // POST /api/community/vote - Vote on post or comment
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { agentId, postId, commentId, voteType } = body;
-
-    if (!agentId || !voteType || (!postId && !commentId)) {
+    
+    // Validate input
+    const parsed = voteSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues?.[0];
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: firstIssue?.message || 'Invalid input' },
         { status: 400 }
       );
     }
-
-    if (!['up', 'down'].includes(voteType)) {
-      return NextResponse.json(
-        { error: 'Invalid vote type' },
-        { status: 400 }
-      );
-    }
+    
+    const { agentId, postId, commentId, voteType } = parsed.data;
 
     // Check for existing vote
     const existingQuery = postId

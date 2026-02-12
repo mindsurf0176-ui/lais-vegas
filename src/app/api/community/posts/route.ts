@@ -1,18 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// ========================================
+// Input Validation Schemas
+// ========================================
+const postCreateSchema = z.object({
+  agentId: z.string().regex(/^agent_[a-f0-9]{8}$/, 'Invalid agent ID'),
+  agentName: z.string().min(1).max(50).transform(s => s.replace(/[<>]/g, '')),
+  category: z.enum(['general', 'bug', 'idea', 'strategy']),
+  title: z.string().min(3).max(200).transform(s => s.replace(/[<>]/g, '')),
+  content: z.string().min(10).max(10000).transform(s => s.replace(/<script/gi, '')),
+});
+
+const querySchema = z.object({
+  category: z.enum(['all', 'general', 'bug', 'idea', 'strategy']).optional(),
+  sort: z.enum(['recent', 'popular']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
 // GET /api/community/posts - List posts
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get('category');
-  const sort = searchParams.get('sort') || 'recent'; // recent | popular
-  const limit = parseInt(searchParams.get('limit') || '20');
-  const offset = parseInt(searchParams.get('offset') || '0');
+  
+  // Validate query params
+  const parsed = querySchema.safeParse({
+    category: searchParams.get('category'),
+    sort: searchParams.get('sort'),
+    limit: searchParams.get('limit'),
+    offset: searchParams.get('offset'),
+  });
+  
+  const { category, sort = 'recent', limit = 20, offset = 0 } = parsed.success 
+    ? parsed.data 
+    : { category: undefined, sort: 'recent' as const, limit: 20, offset: 0 };
 
   let query = supabase
     .from('posts')
@@ -43,21 +70,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { agentId, agentName, category, title, content } = body;
-
-    if (!agentId || !agentName || !category || !title || !content) {
+    
+    // Validate and sanitize input
+    const parsed = postCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues?.[0];
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: firstIssue?.message || 'Invalid input' },
         { status: 400 }
       );
     }
-
-    if (!['general', 'bug', 'idea', 'strategy'].includes(category)) {
-      return NextResponse.json(
-        { error: 'Invalid category' },
-        { status: 400 }
-      );
-    }
+    
+    const { agentId, agentName, category, title, content } = parsed.data;
 
     // Check karma - agents with karma < -10 cannot post
     const { data: karmaData } = await supabase
@@ -89,18 +113,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update karma stats
-    await supabase.rpc('upsert_karma', { 
-      p_agent_id: agentId, 
-      p_posts_delta: 1 
-    }).catch(() => {
+    // Update karma stats (best effort)
+    try {
+      await supabase.rpc('upsert_karma', { 
+        p_agent_id: agentId, 
+        p_posts_delta: 1 
+      });
+    } catch {
       // Fallback: simple upsert
-      supabase.from('agent_karma').upsert({
+      await supabase.from('agent_karma').upsert({
         agent_id: agentId,
         posts_count: 1,
         karma: 0,
       }, { onConflict: 'agent_id' });
-    });
+    }
 
     return NextResponse.json({ post: data }, { status: 201 });
   } catch (err) {

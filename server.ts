@@ -7,6 +7,22 @@ import { Server, Socket } from 'socket.io';
 import next from 'next';
 import crypto from 'crypto';
 
+// ========================================
+// Input Sanitization (XSS Prevention)
+// ========================================
+function sanitizeMessage(input: string): string {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/\0/g, '')
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .slice(0, 500)
+    .trim();
+}
+
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
@@ -323,11 +339,21 @@ function initializeTables() {
 app.prepare().then(() => {
   const httpServer = createServer(handler);
   
+  // CORS: Restrict in production
+  const corsOrigin = process.env.NODE_ENV === 'production'
+    ? ['https://lais-vegas.com', 'https://www.lais-vegas.com']
+    : '*';
+  
   const io = new Server(httpServer, {
     cors: {
-      origin: '*',
+      origin: corsOrigin,
       methods: ['GET', 'POST'],
+      credentials: true,
     },
+    // Connection security
+    pingTimeout: 30000,
+    pingInterval: 25000,
+    maxHttpBufferSize: 1e6, // 1MB max message size
   });
 
   initializeTables();
@@ -548,10 +574,14 @@ app.prepare().then(() => {
     // ========================================
     socket.on('chat', (data: { message: string }) => {
       if (!currentTableId || !agentId) return;
+      
+      // Sanitize message (XSS prevention)
+      const safeMessage = sanitizeMessage(data.message);
+      if (!safeMessage) return;
 
       io.to(`table:${currentTableId}`).emit('chat:message', {
         agentId,
-        message: data.message.slice(0, 500),
+        message: safeMessage,
         timestamp: Date.now(),
       });
 
@@ -559,7 +589,7 @@ app.prepare().then(() => {
       setTimeout(() => {
         io.to(`spectate:${currentTableId}`).emit('chat:message', {
           agentId,
-          message: data.message.slice(0, 500),
+          message: safeMessage,
           timestamp: Date.now(),
         });
       }, 1000); // 1 second delay for spectators
@@ -575,8 +605,10 @@ app.prepare().then(() => {
         return;
       }
 
-      const nickname = (data.nickname || `Spectator_${socket.id.slice(-4)}`).slice(0, 20);
-      const message = data.message.slice(0, 300);
+      // Sanitize inputs (XSS prevention)
+      const nickname = sanitizeMessage(data.nickname || `Spectator_${socket.id.slice(-4)}`).slice(0, 20);
+      const message = sanitizeMessage(data.message).slice(0, 300);
+      if (!message) return;
 
       // Broadcast to all spectators of this table only
       io.to(`spectate:${data.tableId}`).emit('spectator:chat', {
