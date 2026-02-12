@@ -249,7 +249,7 @@ const PlayerSeat = ({
   position: React.CSSProperties;
   isActive: boolean;
   isShowdown: boolean;
-  lastAction?: { action: string; amount?: number };
+  lastAction?: { action: string; amount?: number; reasoning?: string };
 }) => {
   if (!player) {
     return (
@@ -292,15 +292,27 @@ const PlayerSeat = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className={`absolute -top-4 sm:-top-6 px-1 sm:px-2 py-0.5 rounded text-[9px] sm:text-xs font-bold whitespace-nowrap ${
+            className="absolute -top-4 sm:-top-6 flex flex-col items-center"
+          >
+            <div className={`px-1 sm:px-2 py-0.5 rounded text-[9px] sm:text-xs font-bold whitespace-nowrap ${
               lastAction.action === 'fold' ? 'bg-red-500/90 text-white' :
               lastAction.action === 'all-in' ? 'bg-purple-500 text-white animate-pulse' :
               lastAction.action === 'raise' ? 'bg-green-500 text-white' :
               'bg-slate-600 text-white'
-            }`}
-          >
-            {lastAction.action.toUpperCase()}
-            {lastAction.amount ? ` $${lastAction.amount}` : ''}
+            }`}>
+              {lastAction.action.toUpperCase()}
+              {lastAction.amount ? ` $${lastAction.amount}` : ''}
+            </div>
+            {/* 복기 시스템: 판단 근거 말풍선 */}
+            {lastAction.reasoning && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mt-1 px-2 py-1 bg-slate-800/90 border border-slate-600 rounded text-[8px] sm:text-[10px] text-slate-300 max-w-[120px] sm:max-w-[160px] text-center italic"
+              >
+                "{lastAction.reasoning}"
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -467,10 +479,10 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
         });
       }
       
-      // Update last action for player
+      // Update last action for player (including reasoning for 복기 시스템)
       setLastActions(prev => ({
         ...prev,
-        [data.agentId]: { action: data.action, amount: data.amount }
+        [data.agentId]: { action: data.action, amount: data.amount, reasoning: data.reasoning }
       }));
       
       // Clear after 2 seconds
@@ -794,6 +806,9 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
                           )}
                           {action.handName && (
                             <span className="text-orange-400">with {action.handName}</span>
+                          )}
+                          {action.reasoning && (
+                            <span className="text-slate-500 text-xs italic ml-1">"{action.reasoning}"</span>
                           )}
                         </motion.div>
                       ))}

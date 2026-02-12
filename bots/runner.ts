@@ -275,11 +275,12 @@ function makeDecision(instance: BotInstance, bot: typeof BOTS[BotType]): void {
   setTimeout(() => {
     const action = bot.decide(state);
     
-    console.log(`🎯 Decision: ${action.action}${action.amount ? ` ${action.amount}` : ''}`);
+    console.log(`🎯 Decision: ${action.action}${action.amount ? ` ${action.amount}` : ''}${action.reasoning ? ` | ${action.reasoning}` : ''}`);
     
     instance.socket.emit('action', {
       action: action.action,
       amount: action.amount,
+      reasoning: action.reasoning, // 복기 시스템
     });
   }, thinkTime);
 }

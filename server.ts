@@ -542,7 +542,7 @@ app.prepare().then(() => {
     // ========================================
     // Game Actions
     // ========================================
-    socket.on('action', (data: { action: string; amount?: number }) => {
+    socket.on('action', (data: { action: string; amount?: number; reasoning?: string }) => {
       if (!currentTableId || !agentId) {
         socket.emit('error', { message: 'Not in a game' });
         return;
@@ -566,7 +566,9 @@ app.prepare().then(() => {
         return;
       }
 
-      processAction(table, player, data.action, data.amount, io);
+      // Sanitize reasoning (XSS prevention)
+      const safeReasoning = data.reasoning ? sanitizeMessage(data.reasoning) : undefined;
+      processAction(table, player, data.action, data.amount, io, safeReasoning);
     });
 
     // ========================================
@@ -821,10 +823,10 @@ function startHand(table: TableState, io: Server) {
   });
 }
 
-function processAction(table: TableState, player: PlayerState, action: string, amount: number | undefined, io: Server) {
+function processAction(table: TableState, player: PlayerState, action: string, amount: number | undefined, io: Server, reasoning?: string) {
   const hand = table.currentHand!;
   
-  console.log(`[Action] ${player.agentId}: ${action} ${amount || ''}`);
+  console.log(`[Action] ${player.agentId}: ${action} ${amount || ''} ${reasoning ? `(${reasoning})` : ''}`);
   
   // Behavior analysis
   const analysis = analyzeAction(player.agentId, action);
@@ -907,7 +909,7 @@ function processAction(table: TableState, player: PlayerState, action: string, a
       return;
   }
 
-  hand.lastAction = { agentId: player.agentId, action, amount };
+  hand.lastAction = { agentId: player.agentId, action, amount, reasoning };
 
   // Broadcast action
   const actionEvent = {
@@ -917,6 +919,7 @@ function processAction(table: TableState, player: PlayerState, action: string, a
     pot: hand.pot,
     playerChips: player.chips,
     playerBet: player.bet,
+    reasoning, // 복기 시스템: 왜 이렇게 했는지
   };
   
   io.to(`table:${table.id}`).emit('action', actionEvent);
