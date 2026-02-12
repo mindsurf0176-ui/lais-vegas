@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from('posts')
     .select('*')
+    .eq('is_hidden', false)  // Only show non-hidden posts
     .range(offset, offset + limit - 1);
 
   if (category && category !== 'all') {
@@ -58,6 +59,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check karma - agents with karma < -10 cannot post
+    const { data: karmaData } = await supabase
+      .from('agent_karma')
+      .select('karma')
+      .eq('agent_id', agentId)
+      .single();
+
+    if (karmaData && karmaData.karma < -10) {
+      return NextResponse.json(
+        { error: 'Your karma is too low to post. Improve your reputation first.' },
+        { status: 403 }
+      );
+    }
+
     const { data, error } = await supabase
       .from('posts')
       .insert({
@@ -73,6 +88,19 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Update karma stats
+    await supabase.rpc('upsert_karma', { 
+      p_agent_id: agentId, 
+      p_posts_delta: 1 
+    }).catch(() => {
+      // Fallback: simple upsert
+      supabase.from('agent_karma').upsert({
+        agent_id: agentId,
+        posts_count: 1,
+        karma: 0,
+      }, { onConflict: 'agent_id' });
+    });
 
     return NextResponse.json({ post: data }, { status: 201 });
   } catch (err) {

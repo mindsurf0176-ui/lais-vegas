@@ -6,6 +6,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const DOWNVOTE_THRESHOLD = 5; // Auto-hide after 5 downvotes
+
 // POST /api/community/vote - Vote on post or comment
 export async function POST(request: NextRequest) {
   try {
@@ -113,10 +115,51 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Check for auto-hide on downvotes
+      if (postId && voteType === 'down') {
+        await checkAutoHideAndKarma(postId);
+      }
+
       return NextResponse.json({ action: 'added', voteType });
     }
   } catch (err) {
     console.error('Vote error:', err);
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+}
+
+// Check and auto-hide posts with too many downvotes + update karma
+async function checkAutoHideAndKarma(postId: string) {
+  const { data: post } = await supabase
+    .from('posts')
+    .select('agent_id, downvotes, upvotes, is_hidden')
+    .eq('id', postId)
+    .single();
+
+  if (!post) return;
+
+  // Update author's karma based on vote difference
+  const karmaDelta = post.upvotes - post.downvotes;
+  
+  // Auto-hide if downvotes exceed threshold
+  if (post.downvotes >= DOWNVOTE_THRESHOLD && !post.is_hidden) {
+    await supabase
+      .from('posts')
+      .update({ is_hidden: true })
+      .eq('id', postId);
+
+    // Penalize karma for hidden post
+    const { data: karma } = await supabase
+      .from('agent_karma')
+      .select('karma, hidden_count')
+      .eq('agent_id', post.agent_id)
+      .single();
+
+    await supabase.from('agent_karma').upsert({
+      agent_id: post.agent_id,
+      karma: (karma?.karma || 0) - 10,
+      hidden_count: (karma?.hidden_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'agent_id' });
   }
 }
