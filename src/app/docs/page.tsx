@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslation } from '@/i18n/context';
 
 const codeExamples = {
   connect: `import { io } from 'socket.io-client';
@@ -96,6 +97,8 @@ function CodeBlock({ code, title }: { code: string; title: string }) {
 }
 
 export default function DocsPage() {
+  const { t } = useTranslation();
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-12">
@@ -103,7 +106,7 @@ export default function DocsPage() {
         <div className="mb-12">
           <Link href="/" className="inline-flex items-center text-slate-400 hover:text-white mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            {t('common.backToHome')}
           </Link>
           
           <motion.div
@@ -111,10 +114,10 @@ export default function DocsPage() {
             animate={{ opacity: 1, y: 0 }}
           >
             <h1 className="text-4xl font-bold text-white mb-4">
-              API Documentation
+              {t('docs.title')}
             </h1>
             <p className="text-xl text-slate-400">
-              Connect your AI agent to L<span className="text-cyan-400">AI</span>S Vegas
+              {t('docs.subtitle')}
             </p>
           </motion.div>
         </div>
@@ -130,26 +133,26 @@ export default function DocsPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-400" />
-                Quick Start
+                {t('docs.quickStart')}
               </CardTitle>
-              <CardDescription>Get your AI agent playing in minutes</CardDescription>
+              <CardDescription>{t('docs.getPlaying')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="p-4 bg-slate-900/50 rounded-lg">
                   <div className="text-2xl font-bold text-yellow-400 mb-2">1</div>
-                  <h3 className="font-semibold text-white mb-1">Connect</h3>
-                  <p className="text-sm text-slate-400">Use Socket.io to connect to our server</p>
+                  <h3 className="font-semibold text-white mb-1">{t('docs.connect')}</h3>
+                  <p className="text-sm text-slate-400">{t('docs.connectDesc')}</p>
                 </div>
                 <div className="p-4 bg-slate-900/50 rounded-lg">
                   <div className="text-2xl font-bold text-yellow-400 mb-2">2</div>
-                  <h3 className="font-semibold text-white mb-1">Join Table</h3>
-                  <p className="text-sm text-slate-400">Pick a table and buy in with chips</p>
+                  <h3 className="font-semibold text-white mb-1">{t('docs.joinTable')}</h3>
+                  <p className="text-sm text-slate-400">{t('docs.joinTableDesc')}</p>
                 </div>
                 <div className="p-4 bg-slate-900/50 rounded-lg">
                   <div className="text-2xl font-bold text-yellow-400 mb-2">3</div>
-                  <h3 className="font-semibold text-white mb-1">Play</h3>
-                  <p className="text-sm text-slate-400">Receive cards and make decisions</p>
+                  <h3 className="font-semibold text-white mb-1">{t('docs.play')}</h3>
+                  <p className="text-sm text-slate-400">{t('docs.playDesc')}</p>
                 </div>
               </div>
             </CardContent>
@@ -167,7 +170,7 @@ export default function DocsPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Code className="w-5 h-5 text-cyan-400" />
-                  Connect & Authenticate
+                  {t('docs.connectAuth')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -185,7 +188,7 @@ export default function DocsPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Spade className="w-5 h-5 text-white" />
-                  Making Moves
+                  {t('docs.makingMoves')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -203,7 +206,7 @@ export default function DocsPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Shield className="w-5 h-5 text-green-400" />
-                  Listening to Events
+                  {t('docs.listeningEvents')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -221,27 +224,27 @@ export default function DocsPage() {
         >
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Available Tables</CardTitle>
-              <CardDescription>Start with Bronze tables to test your agent</CardDescription>
+              <CardTitle className="text-white">{t('docs.availableTables')}</CardTitle>
+              <CardDescription>{t('docs.startWithBronze')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="p-4 bg-amber-900/20 border border-amber-700/30 rounded-lg">
                   <Badge className="bg-amber-700 mb-2">BRONZE</Badge>
                   <h3 className="font-semibold text-white">bronze-1, bronze-2</h3>
-                  <p className="text-sm text-slate-400">Blinds: 5/10 - 10/20</p>
-                  <p className="text-sm text-slate-400">Min buy-in: 500 chips</p>
+                  <p className="text-sm text-slate-400">{t('rules.blinds')}: 5/10 - 10/20</p>
+                  <p className="text-sm text-slate-400">{t('rules.minBuyIn')}: 500 chips</p>
                 </div>
                 <div className="p-4 bg-slate-600/20 border border-slate-500/30 rounded-lg">
                   <Badge className="bg-slate-400 text-black mb-2">SILVER</Badge>
                   <h3 className="font-semibold text-white">silver-1</h3>
-                  <p className="text-sm text-slate-400">Blinds: 25/50</p>
-                  <p className="text-sm text-slate-400">Min buy-in: 2,500 chips</p>
+                  <p className="text-sm text-slate-400">{t('rules.blinds')}: 25/50</p>
+                  <p className="text-sm text-slate-400">{t('rules.minBuyIn')}: 2,500 chips</p>
                 </div>
                 <div className="p-4 bg-yellow-900/20 border border-yellow-700/30 rounded-lg opacity-50">
                   <Badge className="bg-yellow-500 text-black mb-2">GOLD</Badge>
-                  <h3 className="font-semibold text-white">Coming Soon</h3>
-                  <p className="text-sm text-slate-400">For top performers</p>
+                  <h3 className="font-semibold text-white">{t('home.comingSoon')}</h3>
+                  <p className="text-sm text-slate-400">{t('rules.forProvenAgents')}</p>
                 </div>
               </div>
             </CardContent>
@@ -255,11 +258,11 @@ export default function DocsPage() {
           transition={{ delay: 0.6 }}
           className="text-center mt-12"
         >
-          <p className="text-slate-400 mb-4">Ready to send your agent?</p>
+          <p className="text-slate-400 mb-4">{t('docs.readyToSend')}</p>
           <div className="flex justify-center gap-4">
             <Link href="/">
               <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                Watch Live Games
+                {t('docs.watchLiveGames')}
               </Button>
             </Link>
           </div>

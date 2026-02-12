@@ -23,9 +23,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
 
   useEffect(() => {
-    // Always use English - no browser detection
-    // AI casino is an international product, English-first
-    setLocaleState('en');
+    // Load from localStorage or browser preference
+    const saved = localStorage.getItem('locale') as Locale;
+    if (saved && locales.includes(saved)) {
+      setLocaleState(saved);
+    } else {
+      // Detect browser language
+      const browserLang = navigator.language.split('-')[0] as Locale;
+      if (locales.includes(browserLang)) {
+        setLocaleState(browserLang);
+      }
+    }
   }, []);
 
   const setLocale = (newLocale: Locale) => {

@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Coffee, Bitcoin, Copy, Check, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import QRCode from 'react-qr-code';
+import { useTranslation } from '@/i18n/context';
 
 const CRYPTO_ADDRESSES = {
   btc: '3N9VXZmHf4V9LE8gKU742o4PeSave8LfEq',
@@ -17,42 +17,7 @@ const CRYPTO_ADDRESSES = {
 
 const KOFI_URL = 'https://ko-fi.com/laisvegas';
 
-const tiers = [
-  { 
-    name: 'Coffee', 
-    emoji: '☕', 
-    amount: '$3',
-    crypto: '0.00005 BTC',
-    description: 'Buy the AI a coffee',
-    perks: ['Supporter badge in chat', 'Our eternal gratitude']
-  },
-  { 
-    name: 'Chip Stack', 
-    emoji: '🎰', 
-    amount: '$10/mo',
-    crypto: '0.00015 BTC',
-    description: 'Monthly supporter',
-    perks: ['Everything in Coffee', 'Name in supporters list', 'Early feature access']
-  },
-  { 
-    name: 'High Roller', 
-    emoji: '💎', 
-    amount: '$30/mo',
-    crypto: '0.0005 BTC',
-    description: 'Serious supporter',
-    perks: ['Everything in Chip Stack', 'Priority feature requests', 'Discord role']
-  },
-  { 
-    name: 'Whale', 
-    emoji: '🐋', 
-    amount: '$100/mo',
-    crypto: '0.0015 BTC',
-    description: 'Legendary supporter',
-    perks: ['Everything in High Roller', 'Custom bot naming', '1-on-1 onboarding', 'Eternal legend status']
-  },
-];
-
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   
   const copy = () => {
@@ -72,7 +37,43 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 export default function SupportPage() {
+  const { t } = useTranslation();
   const [selectedCrypto, setSelectedCrypto] = useState<'btc' | 'eth' | 'sol'>('btc');
+
+  const tiers = [
+    { 
+      name: t('tiers.coffee'), 
+      emoji: '☕', 
+      amount: '$3',
+      crypto: '0.00005 BTC',
+      description: t('tiers.coffeeDesc'),
+      perks: [t('perks.supporterBadge'), t('perks.eternalGratitude')]
+    },
+    { 
+      name: t('tiers.chipStack'), 
+      emoji: '🎰', 
+      amount: '$10/mo',
+      crypto: '0.00015 BTC',
+      description: t('tiers.chipStackDesc'),
+      perks: [t('tiers.coffee') + ' +', t('perks.nameInList'), t('perks.earlyAccess')]
+    },
+    { 
+      name: t('tiers.highRoller'), 
+      emoji: '💎', 
+      amount: '$30/mo',
+      crypto: '0.0005 BTC',
+      description: t('tiers.highRollerDesc'),
+      perks: [t('tiers.chipStack') + ' +', t('perks.priorityRequests'), t('perks.discordRole')]
+    },
+    { 
+      name: t('tiers.whale'), 
+      emoji: '🐋', 
+      amount: '$100/mo',
+      crypto: '0.0015 BTC',
+      description: t('tiers.whaleDesc'),
+      perks: [t('tiers.highRoller') + ' +', t('perks.customBotNaming'), t('perks.oneOnOne'), t('perks.legendStatus')]
+    },
+  ];
   
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -81,7 +82,7 @@ export default function SupportPage() {
         <div className="mb-12">
           <Link href="/" className="inline-flex items-center text-slate-400 hover:text-white mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            {t('common.backToHome')}
           </Link>
           
           <motion.div
@@ -90,10 +91,10 @@ export default function SupportPage() {
           >
             <h1 className="text-4xl font-bold text-white mb-4 flex items-center gap-3">
               <Heart className="w-10 h-10 text-red-500" />
-              Support L<span className="text-cyan-400">AI</span>S Vegas
+              {t('support.title')}
             </h1>
             <p className="text-xl text-slate-400">
-              Help us keep the AI casino running 24/7
+              {t('support.subtitle')}
             </p>
           </motion.div>
         </div>
@@ -110,18 +111,18 @@ export default function SupportPage() {
               <div className="grid md:grid-cols-3 gap-6 text-center">
                 <div>
                   <div className="text-3xl mb-2">🎰</div>
-                  <h3 className="font-semibold text-white mb-1">100% Free</h3>
-                  <p className="text-sm text-slate-400">No paywalls, no subscriptions required</p>
+                  <h3 className="font-semibold text-white mb-1">{t('support.free')}</h3>
+                  <p className="text-sm text-slate-400">{t('support.freeDesc')}</p>
                 </div>
                 <div>
                   <div className="text-3xl mb-2">🤖</div>
-                  <h3 className="font-semibold text-white mb-1">24/7 AI Games</h3>
-                  <p className="text-sm text-slate-400">Servers running around the clock</p>
+                  <h3 className="font-semibold text-white mb-1">{t('support.aiGames')}</h3>
+                  <p className="text-sm text-slate-400">{t('support.aiGamesDesc')}</p>
                 </div>
                 <div>
                   <div className="text-3xl mb-2">🌍</div>
-                  <h3 className="font-semibold text-white mb-1">Community Driven</h3>
-                  <p className="text-sm text-slate-400">Built by the community, for the community</p>
+                  <h3 className="font-semibold text-white mb-1">{t('support.community')}</h3>
+                  <p className="text-sm text-slate-400">{t('support.communityDesc')}</p>
                 </div>
               </div>
             </CardContent>
@@ -135,7 +136,7 @@ export default function SupportPage() {
           transition={{ delay: 0.2 }}
           className="mb-12"
         >
-          <h2 className="text-2xl font-bold text-white mb-6">Support Tiers</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">{t('support.tiers')}</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {tiers.map((tier, index) => (
               <Card 
@@ -182,16 +183,16 @@ export default function SupportPage() {
                   <Coffee className="w-5 h-5 text-yellow-400" />
                   Ko-fi (Card/PayPal)
                 </CardTitle>
-                <CardDescription>Traditional payment methods</CardDescription>
+                <CardDescription>{t('support.kofiCard')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-slate-400">
-                  Support us with credit card or PayPal through Ko-fi.
+                  {t('support.kofiDesc')}
                 </p>
                 <a href={KOFI_URL} target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-[#FF5E5B] hover:bg-[#FF5E5B]/90">
                     <Coffee className="w-4 h-4 mr-2" />
-                    Support on Ko-fi
+                    {t('support.supportOnKofi')}
                     <ExternalLink className="w-4 h-4 ml-2" />
                   </Button>
                 </a>
@@ -209,15 +210,15 @@ export default function SupportPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Bitcoin className="w-5 h-5 text-orange-400" />
-                  Cryptocurrency
+                  {t('support.crypto')}
                 </CardTitle>
-                <CardDescription>Direct crypto payments</CardDescription>
+                <CardDescription>{t('support.cryptoDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Crypto Selector */}
                 <div className="flex gap-2">
                   {(['btc', 'eth', 'sol'] as const)
-                    .filter(crypto => CRYPTO_ADDRESSES[crypto]) // Only show configured addresses
+                    .filter(crypto => CRYPTO_ADDRESSES[crypto])
                     .map((crypto) => (
                     <Button
                       key={crypto}
@@ -234,12 +235,9 @@ export default function SupportPage() {
                 {/* Address */}
                 <div>
                   <label className="text-sm text-slate-400 mb-2 block">
-                    {selectedCrypto.toUpperCase()} Address:
+                    {selectedCrypto.toUpperCase()} {t('support.address')}:
                   </label>
-                  <CopyButton 
-                    text={CRYPTO_ADDRESSES[selectedCrypto]} 
-                    label={selectedCrypto.toUpperCase()}
-                  />
+                  <CopyButton text={CRYPTO_ADDRESSES[selectedCrypto]} />
                 </div>
                 
                 {/* QR Code */}
@@ -254,7 +252,7 @@ export default function SupportPage() {
                 )}
                 
                 <p className="text-xs text-slate-500 text-center">
-                  Send any amount. Transaction may take a few minutes to confirm.
+                  {t('support.transactionNote')}
                 </p>
               </CardContent>
             </Card>
@@ -269,7 +267,7 @@ export default function SupportPage() {
           className="mt-12 text-center"
         >
           <p className="text-slate-400">
-            Every contribution helps keep L<span className="text-cyan-400">AI</span>S Vegas alive. Thank you! 🙏
+            {t('support.thankYou')}
           </p>
         </motion.div>
       </div>

@@ -3,8 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Spade, Heart, Diamond, Club } from 'lucide-react';
+import { ArrowLeft, Spade } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from '@/i18n/context';
 
 const handRankings = [
   { rank: 1, name: 'Royal Flush', description: 'A, K, Q, J, 10 of the same suit', example: 'A♠ K♠ Q♠ J♠ 10♠', probability: '0.000154%' },
@@ -37,6 +38,8 @@ const actions = [
 ];
 
 export default function RulesPage() {
+  const { t } = useTranslation();
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-12">
@@ -44,7 +47,7 @@ export default function RulesPage() {
         <div className="mb-12">
           <Link href="/" className="inline-flex items-center text-slate-400 hover:text-white mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            {t('common.backToHome')}
           </Link>
           
           <motion.div
@@ -53,10 +56,10 @@ export default function RulesPage() {
           >
             <h1 className="text-4xl font-bold text-white mb-4 flex items-center gap-3">
               <Spade className="w-10 h-10 text-white" />
-              Texas Hold&apos;em Rules
+              {t('rules.title')}
             </h1>
             <p className="text-xl text-slate-400">
-              The official game of L<span className="text-cyan-400">AI</span>S Vegas
+              {t('rules.subtitle')}
             </p>
           </motion.div>
         </div>
@@ -70,7 +73,7 @@ export default function RulesPage() {
         >
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Game Flow</CardTitle>
+              <CardTitle className="text-white">{t('rules.gameFlow')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -102,7 +105,7 @@ export default function RulesPage() {
         >
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Available Actions</CardTitle>
+              <CardTitle className="text-white">{t('rules.availableActions')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -134,8 +137,8 @@ export default function RulesPage() {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-3">
-                Hand Rankings
-                <span className="text-sm font-normal text-slate-400">(Best to Worst)</span>
+                {t('rules.handRankings')}
+                <span className="text-sm font-normal text-slate-400">({t('rules.bestToWorst')})</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -189,35 +192,35 @@ export default function RulesPage() {
         >
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Betting Structure</CardTitle>
+              <CardTitle className="text-white">{t('rules.bettingStructure')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="p-4 bg-amber-900/20 border border-amber-700/30 rounded-lg">
                   <Badge className="bg-amber-700 mb-3">BRONZE</Badge>
-                  <h3 className="font-semibold text-white mb-2">Blinds: 5/10</h3>
+                  <h3 className="font-semibold text-white mb-2">{t('rules.blinds')}: 5/10</h3>
                   <ul className="text-sm text-slate-400 space-y-1">
-                    <li>• Min buy-in: 500 chips</li>
-                    <li>• Max buy-in: 2,000 chips</li>
-                    <li>• Min raise: 20 chips</li>
+                    <li>• {t('rules.minBuyIn')}: 500 chips</li>
+                    <li>• {t('rules.maxBuyIn')}: 2,000 chips</li>
+                    <li>• {t('rules.minRaise')}: 20 chips</li>
                   </ul>
                 </div>
                 <div className="p-4 bg-slate-600/20 border border-slate-500/30 rounded-lg">
                   <Badge className="bg-slate-400 text-black mb-3">SILVER</Badge>
-                  <h3 className="font-semibold text-white mb-2">Blinds: 25/50</h3>
+                  <h3 className="font-semibold text-white mb-2">{t('rules.blinds')}: 25/50</h3>
                   <ul className="text-sm text-slate-400 space-y-1">
-                    <li>• Min buy-in: 2,500 chips</li>
-                    <li>• Max buy-in: 10,000 chips</li>
-                    <li>• Min raise: 100 chips</li>
+                    <li>• {t('rules.minBuyIn')}: 2,500 chips</li>
+                    <li>• {t('rules.maxBuyIn')}: 10,000 chips</li>
+                    <li>• {t('rules.minRaise')}: 100 chips</li>
                   </ul>
                 </div>
                 <div className="p-4 bg-yellow-900/20 border border-yellow-700/30 rounded-lg opacity-50">
                   <Badge className="bg-yellow-500 text-black mb-3">GOLD</Badge>
-                  <h3 className="font-semibold text-white mb-2">Coming Soon</h3>
+                  <h3 className="font-semibold text-white mb-2">{t('home.comingSoon')}</h3>
                   <ul className="text-sm text-slate-400 space-y-1">
-                    <li>• For proven agents</li>
-                    <li>• High stakes</li>
-                    <li>• Invitation only</li>
+                    <li>• {t('rules.forProvenAgents')}</li>
+                    <li>• {t('rules.highStakes')}</li>
+                    <li>• {t('rules.invitationOnly')}</li>
                   </ul>
                 </div>
               </div>

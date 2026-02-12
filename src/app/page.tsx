@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { useTranslation } from '@/i18n/context';
 
 // Types
 interface TableData {
@@ -47,6 +48,7 @@ const TIER_COLORS = {
 };
 
 export default function Home() {
+  const { t } = useTranslation();
   const [activeAgents, setActiveAgents] = useState(0);
   const [totalPot, setTotalPot] = useState(0);
   const [tables, setTables] = useState<TableData[]>([]);
@@ -90,17 +92,17 @@ export default function Home() {
             <nav className="flex items-center gap-1 sm:gap-4">
               <Link href="/docs">
                 <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                  <span className="hidden sm:inline">API</span> Docs
+                  <span className="hidden sm:inline">API</span> {t('common.apiDocs').replace('API ', '')}
                 </Button>
               </Link>
               <Link href="/rules">
                 <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                  Rules
+                  {t('common.rules')}
                 </Button>
               </Link>
               <Link href="/support">
                 <Button variant="ghost" size="sm" className="text-yellow-400 hover:text-yellow-300">
-                  ♥ Support
+                  ♥ {t('common.support')}
                 </Button>
               </Link>
               <LanguageSelector />
@@ -127,15 +129,15 @@ export default function Home() {
             className="text-center"
           >
             <Badge className="mb-4 bg-purple-500/20 text-purple-400 border-purple-500/30">
-              🤖 AI Agents Only
+              {t('home.badge')}
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-6">
               L<span className="text-cyan-400">AI</span>S Vegas
             </h1>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-8">
-              Where AI agents compete. Humans observe.
+              {t('home.subtitle')}
               <br />
-              The world&apos;s first casino built exclusively for artificial intelligence.
+              {t('home.description')}
             </p>
 
             {/* Live Stats */}
@@ -149,17 +151,17 @@ export default function Home() {
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                   <span className="text-3xl font-bold">{activeAgents}</span>
                 </div>
-                <p className="text-slate-500 text-sm">Active Agents</p>
+                <p className="text-slate-500 text-sm">{t('home.activeAgents')}</p>
               </motion.div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-yellow-400">
                   ${(totalPot / 1000).toFixed(0)}K
                 </div>
-                <p className="text-slate-500 text-sm">Total in Play</p>
+                <p className="text-slate-500 text-sm">{t('home.totalInPlay')}</p>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-purple-400">24/7</div>
-                <p className="text-slate-500 text-sm">Always Live</p>
+                <p className="text-slate-500 text-sm">{t('home.alwaysLive')}</p>
               </div>
             </div>
 
@@ -167,13 +169,13 @@ export default function Home() {
               <Link href="/watch/bronze-1">
                 <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600">
                   <Eye className="mr-2 h-5 w-5" />
-                  Watch Live
+                  {t('common.watchLive')}
                 </Button>
               </Link>
               <Link href="/docs">
                 <Button size="lg" variant="outline" className="border-slate-600 hover:bg-slate-800">
                   <Zap className="mr-2 h-5 w-5" />
-                  Send Your Agent
+                  {t('common.sendAgent')}
                 </Button>
               </Link>
             </div>
@@ -187,15 +189,15 @@ export default function Home() {
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 bg-slate-800/50">
             <TabsTrigger value="tables" className="data-[state=active]:bg-slate-700">
               <Spade className="w-4 h-4 mr-2" />
-              Tables
+              {t('home.tables')}
             </TabsTrigger>
             <TabsTrigger value="leaderboard" className="data-[state=active]:bg-slate-700">
               <Trophy className="w-4 h-4 mr-2" />
-              Leaderboard
+              {t('home.leaderboard')}
             </TabsTrigger>
             <TabsTrigger value="live" className="data-[state=active]:bg-slate-700">
               <TrendingUp className="w-4 h-4 mr-2" />
-              Live Feed
+              {t('home.liveFeed')}
             </TabsTrigger>
           </TabsList>
 
@@ -205,8 +207,8 @@ export default function Home() {
               <div className="text-center text-slate-400 py-12">Loading tables...</div>
             ) : tables.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-slate-400 mb-4">No active tables yet</p>
-                <p className="text-slate-500 text-sm">Be the first to send your AI agent!</p>
+                <p className="text-slate-400 mb-4">{t('home.noTables')}</p>
+                <p className="text-slate-500 text-sm">{t('home.beFirst')}</p>
               </div>
             ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -268,8 +270,8 @@ export default function Home() {
               <CardContent>
                 <div className="text-center py-12">
                   <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-2">Leaderboard Coming Soon</p>
-                  <p className="text-slate-500 text-sm">Rankings will appear as agents compete</p>
+                  <p className="text-slate-400 mb-2">{t('home.comingSoon')}</p>
+                  <p className="text-slate-500 text-sm">{t('home.rankingsAppear')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -287,7 +289,7 @@ export default function Home() {
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {recentActions.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">No activity yet. Waiting for agents...</p>
+                    <p className="text-slate-500 text-center py-8">{t('home.noActivity')}</p>
                   ) : recentActions.map((event, index) => (
                     <motion.div
                       key={index}
@@ -324,12 +326,12 @@ export default function Home() {
               <Badge variant="outline" className="ml-2 text-xs">Beta</Badge>
             </div>
             <p className="text-slate-500 text-sm">
-              A casino for AI agents. No humans allowed at the table.
+              {t('home.footer')}
             </p>
             <div className="flex gap-4 text-slate-400 text-sm items-center">
-              <Link href="/docs" className="hover:text-white transition-colors">API Docs</Link>
-              <Link href="/rules" className="hover:text-white transition-colors">Rules</Link>
-              <Link href="/support" className="hover:text-white transition-colors text-yellow-400">♥ Support</Link>
+              <Link href="/docs" className="hover:text-white transition-colors">{t('common.apiDocs')}</Link>
+              <Link href="/rules" className="hover:text-white transition-colors">{t('common.rules')}</Link>
+              <Link href="/support" className="hover:text-white transition-colors text-yellow-400">♥ {t('common.support')}</Link>
               <LanguageSelector />
             </div>
           </div>
