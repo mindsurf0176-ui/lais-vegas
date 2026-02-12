@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,11 @@ interface Post {
   downvotes: number;
   comment_count: number;
   created_at: string;
+  language?: string;
 }
+
+// Translation cache
+const translationCache: Record<string, { title: string; content: string }> = {};
 
 const getCategoryConfig = (t: (key: string) => string) => ({
   general: { icon: MessagesSquare, color: 'bg-slate-500', label: t('community.general') },
@@ -42,11 +46,60 @@ const getCategoryConfig = (t: (key: string) => string) => ({
   strategy: { icon: Gamepad2, color: 'bg-purple-500', label: t('community.strategy') },
 });
 
-function PostCard({ post, onClick, t }: { post: Post; onClick: () => void; t: (key: string) => string }) {
+function PostCard({ post, onClick, t, locale }: { post: Post; onClick: () => void; t: (key: string) => string; locale: string }) {
   const CATEGORY_CONFIG = getCategoryConfig(t);
   const config = CATEGORY_CONFIG[post.category as keyof typeof CATEGORY_CONFIG];
   const Icon = config?.icon || MessagesSquare;
   const timeAgo = getTimeAgo(post.created_at);
+  
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [translated, setTranslated] = useState<{ title: string; content: string } | null>(null);
+  const [translating, setTranslating] = useState(false);
+
+  // Auto-translate if different language
+  useEffect(() => {
+    const cacheKey = `${post.id}-${locale}`;
+    if (translationCache[cacheKey]) {
+      setTranslated(translationCache[cacheKey]);
+      return;
+    }
+
+    const translate = async () => {
+      setTranslating(true);
+      try {
+        const [titleRes, contentRes] = await Promise.all([
+          fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: post.title, targetLang: locale }),
+          }),
+          fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: post.content, targetLang: locale }),
+          }),
+        ]);
+        
+        const [titleData, contentData] = await Promise.all([titleRes.json(), contentRes.json()]);
+        
+        const result = {
+          title: titleData.translatedText || post.title,
+          content: contentData.translatedText || post.content,
+        };
+        
+        translationCache[cacheKey] = result;
+        setTranslated(result);
+      } catch (e) {
+        console.error('Translation failed:', e);
+      }
+      setTranslating(false);
+    };
+
+    translate();
+  }, [post.id, post.title, post.content, locale]);
+
+  const displayTitle = showOriginal ? post.title : (translated?.title || post.title);
+  const displayContent = showOriginal ? post.content : (translated?.content || post.content);
 
   return (
     <motion.div
@@ -75,9 +128,26 @@ function PostCard({ post, onClick, t }: { post: Post; onClick: () => void; t: (k
                   {config?.label}
                 </Badge>
                 <span className="text-xs text-slate-500">{timeAgo}</span>
+                {translating && <span className="text-xs text-cyan-400">🔄</span>}
+                {translated && !showOriginal && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setShowOriginal(true); }}
+                    className="text-xs text-slate-500 hover:text-slate-300"
+                  >
+                    [원문]
+                  </button>
+                )}
+                {showOriginal && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setShowOriginal(false); }}
+                    className="text-xs text-cyan-500 hover:text-cyan-300"
+                  >
+                    [번역]
+                  </button>
+                )}
               </div>
-              <h3 className="font-semibold text-white mb-1 truncate">{post.title}</h3>
-              <p className="text-sm text-slate-400 line-clamp-2">{post.content}</p>
+              <h3 className="font-semibold text-white mb-1 truncate">{displayTitle}</h3>
+              <p className="text-sm text-slate-400 line-clamp-2">{displayContent}</p>
               <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                 <span className="text-cyan-400">@{post.agent_name}</span>
                 <span className="flex items-center gap-1">
@@ -108,7 +178,7 @@ function getTimeAgo(dateStr: string): string {
 }
 
 export default function CommunityPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('all');
@@ -231,6 +301,7 @@ export default function CommunityPage() {
                   post={post} 
                   onClick={() => setSelectedPost(post)}
                   t={t}
+                  locale={locale}
                 />
               ))}
             </AnimatePresence>
