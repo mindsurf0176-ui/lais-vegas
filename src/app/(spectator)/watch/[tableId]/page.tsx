@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
+import { useTranslation } from '@/i18n/context';
 
 // ========================================
 // Sound Effects
@@ -301,6 +302,7 @@ const HighlightOverlay = ({
 // ========================================
 export default function WatchTable({ params }: { params: Promise<{ tableId: string }> }) {
   const { tableId } = use(params);
+  const { t } = useTranslation();
   const [connected, setConnected] = useState(false);
   const [tableData, setTableData] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -486,7 +488,7 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-400">
-            {connected ? 'Loading table...' : 'Connecting...'}
+            {connected ? t('watch.loadingTable') : t('watch.connecting')}
           </p>
         </div>
       </div>
@@ -498,9 +500,9 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Table not found or empty</p>
+          <p className="text-slate-400 mb-4">{t('watch.tableNotFound')}</p>
           <Link href="/">
-            <Button variant="outline">Back to Lobby</Button>
+            <Button variant="outline">{t('watch.backToLobby')}</Button>
           </Link>
         </div>
       </div>
@@ -533,7 +535,7 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
             <Link href="/">
               <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white px-2 sm:px-3">
                 <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Lobby</span>
+                <span className="hidden sm:inline">{t('watch.lobby')}</span>
               </Button>
             </Link>
             <div>
@@ -544,7 +546,7 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
                 {isShowdown && (
                   <Badge className="bg-orange-500 animate-pulse text-[10px] sm:text-xs px-1 sm:px-2">
                     <Flame className="w-3 h-3 sm:mr-1" />
-                    <span className="hidden sm:inline">SHOWDOWN</span>
+                    <span className="hidden sm:inline">{t('watch.showdown')}</span>
                   </Badge>
                 )}
               </h1>
@@ -598,7 +600,7 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
                       animate={{ scale: pot > 10000 ? [1, 1.02, 1] : 1 }}
                       transition={{ repeat: pot > 10000 ? Infinity : 0, duration: 1 }}
                     >
-                      <p className="text-xs text-slate-400 uppercase tracking-wide">Pot</p>
+                      <p className="text-xs text-slate-400 uppercase tracking-wide">{t('watch.pot')}</p>
                       <p className={`text-2xl font-bold ${pot > 50000 ? 'text-orange-400' : 'text-yellow-400'}`}>
                         ${pot.toLocaleString()}
                       </p>
@@ -631,12 +633,12 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
                       phase === 'river' ? 'bg-blue-500' :
                       'bg-slate-700'
                     } text-white uppercase text-xs`}>
-                      {phase === 'preflop' ? '🃏 Pre-Flop' :
-                       phase === 'flop' ? '🃏 Flop' :
-                       phase === 'turn' ? '🃏 Turn' :
-                       phase === 'river' ? '🃏 River' :
-                       phase === 'showdown' ? '🔥 Showdown' :
-                       '⏳ Waiting'}
+                      {phase === 'preflop' ? t('watch.preflop') :
+                       phase === 'flop' ? t('watch.flop') :
+                       phase === 'turn' ? t('watch.turn') :
+                       phase === 'river' ? t('watch.river') :
+                       phase === 'showdown' ? t('watch.showdownPhase') :
+                       t('watch.waiting')}
                     </Badge>
                   </div>
                   
@@ -664,13 +666,13 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
               <CardHeader className="py-2 px-4">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Zap className="w-4 h-4 text-yellow-400" />
-                  Live Actions
+                  {t('watch.liveActions')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="py-2 px-4 max-h-32 overflow-y-auto">
                 <AnimatePresence>
                   {actions.length === 0 ? (
-                    <p className="text-slate-500 text-sm">Waiting for action...</p>
+                    <p className="text-slate-500 text-sm">{t('watch.waitingForAction')}</p>
                   ) : (
                     <div className="space-y-1">
                       {actions.slice(0, 5).map((action, i) => (
@@ -711,16 +713,16 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
               <CardHeader className="py-2 px-4">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-green-400" />
-                  Session Stats
+                  {t('watch.sessionStats')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="py-2 px-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Players</span>
+                  <span className="text-slate-400">{t('watch.players')}</span>
                   <span className="text-white">{players.length}/9</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Avg Stack</span>
+                  <span className="text-slate-400">{t('watch.avgStack')}</span>
                   <span className="text-white">
                     ${players.length > 0 
                       ? Math.round(players.reduce((a: number, p: any) => a + (p.chips || 0), 0) / players.length).toLocaleString()
@@ -729,24 +731,24 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Total Hands</span>
+                  <span className="text-slate-400">{t('watch.totalHands')}</span>
                   <span className="text-white">{tableData.stats?.totalHands || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Biggest Pot</span>
+                  <span className="text-slate-400">{t('watch.biggestPot')}</span>
                   <span className="text-yellow-400 font-medium">
                     ${(tableData.stats?.biggestPot || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">All-Ins</span>
+                  <span className="text-slate-400">{t('watch.allIns')}</span>
                   <span className="text-purple-400 font-medium">
                     {tableData.stats?.totalAllIns || 0}
                   </span>
                 </div>
                 {tableData.stats?.uptime && (
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Uptime</span>
+                    <span className="text-slate-400">{t('watch.uptime')}</span>
                     <span className="text-slate-300 font-mono text-xs">
                       {Math.floor((tableData.stats.uptime) / 3600)}h {Math.floor(((tableData.stats.uptime) % 3600) / 60)}m
                     </span>
@@ -760,12 +762,12 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
               <CardHeader className="py-2 px-4 border-b border-slate-700">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <MessageCircle className="w-4 h-4" />
-                  Spectator Chat
+                  {t('watch.spectatorChat')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto py-2 px-4 space-y-2">
                 {spectatorMessages.length === 0 ? (
-                  <p className="text-slate-500 text-sm">Be the first to chat!</p>
+                  <p className="text-slate-500 text-sm">{t('watch.beFirstToChat')}</p>
                 ) : (
                   <AnimatePresence>
                     {spectatorMessages.slice(-20).map((msg, i) => (
@@ -801,12 +803,12 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Say something..."
+                    placeholder={t('watch.saySomething')}
                     maxLength={300}
                     className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
                   />
                   <Button type="submit" size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-black">
-                    Send
+                    {t('watch.send')}
                   </Button>
                 </form>
               </div>
@@ -815,11 +817,11 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
             {/* Players List */}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader className="py-2 px-4">
-                <CardTitle className="text-sm">Players</CardTitle>
+                <CardTitle className="text-sm">{t('watch.players')}</CardTitle>
               </CardHeader>
               <CardContent className="py-2 px-4 space-y-2">
                 {players.length === 0 ? (
-                  <p className="text-slate-500 text-sm">Waiting for players...</p>
+                  <p className="text-slate-500 text-sm">{t('watch.waitingForPlayers')}</p>
                 ) : (
                   players.map((player: any, i: number) => (
                     <div 
