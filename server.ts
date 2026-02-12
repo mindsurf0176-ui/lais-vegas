@@ -253,6 +253,13 @@ function emitToSpectatorsWithDelay(io: Server, tableId: string, event: string, d
 }
 
 // In-memory game state (production: use Redis)
+interface TableStats {
+  totalHands: number;
+  biggestPot: number;
+  totalAllIns: number;
+  startedAt: number;
+}
+
 interface TableState {
   id: string;
   name: string;
@@ -260,6 +267,7 @@ interface TableState {
   currentHand: HandState | null;
   dealerSeat: number;
   spectators: Set<string>;
+  stats: TableStats;
 }
 
 interface PlayerState {
@@ -302,6 +310,12 @@ function initializeTables() {
       currentHand: null,
       dealerSeat: 0,
       spectators: new Set(),
+      stats: {
+        totalHands: 0,
+        biggestPot: 0,
+        totalAllIns: 0,
+        startedAt: Date.now(),
+      },
     });
   }
 }
@@ -648,6 +662,12 @@ function getTableState(table: TableState) {
       currentBet: table.currentHand.currentBet,
       activePlayerSeat: table.currentHand.activePlayerSeat,
     } : null,
+    stats: {
+      totalHands: table.stats.totalHands,
+      biggestPot: table.stats.biggestPot,
+      totalAllIns: table.stats.totalAllIns,
+      uptime: Math.floor((Date.now() - table.stats.startedAt) / 1000),
+    },
   };
 }
 
@@ -788,7 +808,10 @@ function processAction(table: TableState, player: PlayerState, action: string, a
       player.chips -= callAmount;
       player.bet += callAmount;
       hand.pot += callAmount;
-      if (player.chips === 0) player.isAllIn = true;
+      if (player.chips === 0) {
+        player.isAllIn = true;
+        table.stats.totalAllIns++;
+      }
       break;
       
     case 'raise':
@@ -801,7 +824,10 @@ function processAction(table: TableState, player: PlayerState, action: string, a
       player.bet += raiseAmount;
       hand.pot += raiseAmount;
       hand.currentBet = player.bet;
-      if (player.chips === 0) player.isAllIn = true;
+      if (player.chips === 0) {
+        player.isAllIn = true;
+        table.stats.totalAllIns++;
+      }
       break;
       
     case 'all_in':
@@ -809,6 +835,7 @@ function processAction(table: TableState, player: PlayerState, action: string, a
       player.bet += player.chips;
       player.chips = 0;
       player.isAllIn = true;
+      table.stats.totalAllIns++;
       if (player.bet > hand.currentBet) {
         hand.currentBet = player.bet;
       }
@@ -935,15 +962,23 @@ function checkHandEnd(table: TableState, io: Server): boolean {
   if (activePlayers.length === 1) {
     // Winner by fold
     const winner = activePlayers[0];
-    winner.chips += table.currentHand!.pot;
+    const potAmount = table.currentHand!.pot;
+    winner.chips += potAmount;
+
+    // Update stats
+    table.stats.totalHands++;
+    if (potAmount > table.stats.biggestPot) {
+      table.stats.biggestPot = potAmount;
+    }
 
     const endEvent = {
       winners: [{
         agentId: winner.agentId,
-        amount: table.currentHand!.pot,
+        amount: potAmount,
         reason: 'Others folded',
       }],
-      pot: table.currentHand!.pot,
+      pot: potAmount,
+      stats: table.stats,
     };
 
     io.to(`table:${table.id}`).emit('hand:end', endEvent);
@@ -967,25 +1002,33 @@ function checkHandEnd(table: TableState, io: Server): boolean {
 function resolveShowdown(table: TableState, io: Server) {
   const hand = table.currentHand!;
   const activePlayers = Array.from(table.players.values()).filter(p => !p.isFolded);
+  const potAmount = hand.pot;
 
   // Evaluate hands and find winner
   // TODO: Use proper hand evaluation from poker.ts
   // For now, random winner
   const winner = activePlayers[Math.floor(Math.random() * activePlayers.length)];
-  winner.chips += hand.pot;
+  winner.chips += potAmount;
+
+  // Update stats
+  table.stats.totalHands++;
+  if (potAmount > table.stats.biggestPot) {
+    table.stats.biggestPot = potAmount;
+  }
 
   const endEvent = {
     winners: [{
       agentId: winner.agentId,
-      amount: hand.pot,
+      amount: potAmount,
       cards: winner.cards,
       reason: 'Best hand', // TODO: Actual hand description
     }],
-    pot: hand.pot,
+    pot: potAmount,
     showdown: activePlayers.map(p => ({
       agentId: p.agentId,
       cards: p.cards,
     })),
+    stats: table.stats,
   };
 
   io.to(`table:${table.id}`).emit('hand:end', endEvent);

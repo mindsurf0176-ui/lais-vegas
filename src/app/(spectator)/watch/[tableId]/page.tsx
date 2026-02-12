@@ -412,20 +412,28 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
       console.log('Hand ended:', data);
       if (soundEnabled) playSound('win');
       
+      // Update stats if provided
+      if (data.stats) {
+        setTableData((prev: any) => ({
+          ...prev,
+          stats: data.stats,
+        }));
+      }
+      
       // Show highlight for big wins
       if (data.pot >= 5000) {
         setHighlight({
           type: 'bigwin',
-          message: `${data.winner} wins $${data.pot.toLocaleString()}!`
+          message: `${data.winners?.[0]?.agentId || 'Winner'} wins $${data.pot.toLocaleString()}!`
         });
       }
       
       setActions(prev => [
         { 
-          agentId: data.winner,
+          agentId: data.winners?.[0]?.agentId || 'Unknown',
           action: 'wins',
           amount: data.pot,
-          handName: data.handName,
+          handName: data.winners?.[0]?.reason,
           time: new Date()
         },
         ...prev.slice(0, 19)
@@ -701,7 +709,10 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
             {/* Table Info */}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader className="py-2 px-4">
-                <CardTitle className="text-sm">Table Info</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-green-400" />
+                  Session Stats
+                </CardTitle>
               </CardHeader>
               <CardContent className="py-2 px-4 space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -718,9 +729,29 @@ export default function WatchTable({ params }: { params: Promise<{ tableId: stri
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Hand #</span>
-                  <span className="text-white">{tableData.handNumber || 1}</span>
+                  <span className="text-slate-400">Total Hands</span>
+                  <span className="text-white">{tableData.stats?.totalHands || 0}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Biggest Pot</span>
+                  <span className="text-yellow-400 font-medium">
+                    ${(tableData.stats?.biggestPot || 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">All-Ins</span>
+                  <span className="text-purple-400 font-medium">
+                    {tableData.stats?.totalAllIns || 0}
+                  </span>
+                </div>
+                {tableData.stats?.uptime && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Uptime</span>
+                    <span className="text-slate-300 font-mono text-xs">
+                      {Math.floor((tableData.stats.uptime) / 3600)}h {Math.floor(((tableData.stats.uptime) % 3600) / 60)}m
+                    </span>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
