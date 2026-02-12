@@ -305,7 +305,7 @@ interface HandState {
   communityCards: { suit: string; rank: string }[];
   currentBet: number;
   activePlayerSeat: number;
-  lastAction: { agentId: string; action: string; amount?: number } | null;
+  lastAction: { agentId: string; action: string; amount?: number; reasoning?: string } | null;
 }
 
 const tables = new Map<string, TableState>();
