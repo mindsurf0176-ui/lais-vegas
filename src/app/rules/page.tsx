@@ -7,38 +7,38 @@ import { ArrowLeft, Spade } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslation } from '@/i18n/context';
 
-const handRankings = [
-  { rank: 1, name: 'Royal Flush', description: 'A, K, Q, J, 10 of the same suit', example: 'A♠ K♠ Q♠ J♠ 10♠', probability: '0.000154%' },
-  { rank: 2, name: 'Straight Flush', description: 'Five consecutive cards of the same suit', example: '9♥ 8♥ 7♥ 6♥ 5♥', probability: '0.00139%' },
-  { rank: 3, name: 'Four of a Kind', description: 'Four cards of the same rank', example: 'K♠ K♥ K♦ K♣ 7♠', probability: '0.024%' },
-  { rank: 4, name: 'Full House', description: 'Three of a kind plus a pair', example: 'J♠ J♥ J♦ 8♣ 8♠', probability: '0.144%' },
-  { rank: 5, name: 'Flush', description: 'Five cards of the same suit', example: 'A♦ J♦ 8♦ 6♦ 2♦', probability: '0.197%' },
-  { rank: 6, name: 'Straight', description: 'Five consecutive cards', example: '10♠ 9♥ 8♦ 7♣ 6♠', probability: '0.392%' },
-  { rank: 7, name: 'Three of a Kind', description: 'Three cards of the same rank', example: 'Q♠ Q♥ Q♦ 9♣ 4♠', probability: '2.11%' },
-  { rank: 8, name: 'Two Pair', description: 'Two different pairs', example: 'A♠ A♥ 7♦ 7♣ 3♠', probability: '4.75%' },
-  { rank: 9, name: 'One Pair', description: 'Two cards of the same rank', example: '10♠ 10♥ K♦ 5♣ 2♠', probability: '42.3%' },
-  { rank: 10, name: 'High Card', description: 'No matching cards', example: 'A♠ J♥ 8♦ 6♣ 2♠', probability: '50.1%' },
-];
-
-const gameFlow = [
-  { phase: 'Blinds', description: 'Small blind and big blind are posted' },
-  { phase: 'Preflop', description: 'Each player receives 2 hole cards. First betting round.' },
-  { phase: 'Flop', description: '3 community cards are dealt. Second betting round.' },
-  { phase: 'Turn', description: '1 more community card. Third betting round.' },
-  { phase: 'River', description: 'Final community card. Last betting round.' },
-  { phase: 'Showdown', description: 'Remaining players reveal cards. Best hand wins.' },
-];
-
-const actions = [
-  { name: 'fold', description: 'Give up your hand and forfeit any bets', when: 'Anytime' },
-  { name: 'check', description: 'Pass without betting (only if no bet to call)', when: 'When current bet equals your bet' },
-  { name: 'call', description: 'Match the current bet', when: 'When facing a bet' },
-  { name: 'raise', description: 'Increase the bet (minimum 2x current bet)', when: 'Anytime you can call' },
-  { name: 'all_in', description: 'Bet all your remaining chips', when: 'Anytime' },
-];
-
 export default function RulesPage() {
   const { t } = useTranslation();
+
+  const handRankings = [
+    { rank: 1, name: t('hands.royalFlush'), description: t('hands.royalFlushDesc'), example: 'A♠ K♠ Q♠ J♠ 10♠', probability: '0.000154%' },
+    { rank: 2, name: t('hands.straightFlush'), description: t('hands.straightFlushDesc'), example: '9♥ 8♥ 7♥ 6♥ 5♥', probability: '0.00139%' },
+    { rank: 3, name: t('hands.fourOfAKind'), description: t('hands.fourOfAKindDesc'), example: 'K♠ K♥ K♦ K♣ 7♠', probability: '0.024%' },
+    { rank: 4, name: t('hands.fullHouse'), description: t('hands.fullHouseDesc'), example: 'J♠ J♥ J♦ 8♣ 8♠', probability: '0.144%' },
+    { rank: 5, name: t('hands.flush'), description: t('hands.flushDesc'), example: 'A♦ J♦ 8♦ 6♦ 2♦', probability: '0.197%' },
+    { rank: 6, name: t('hands.straight'), description: t('hands.straightDesc'), example: '10♠ 9♥ 8♦ 7♣ 6♠', probability: '0.392%' },
+    { rank: 7, name: t('hands.threeOfAKind'), description: t('hands.threeOfAKindDesc'), example: 'Q♠ Q♥ Q♦ 9♣ 4♠', probability: '2.11%' },
+    { rank: 8, name: t('hands.twoPair'), description: t('hands.twoPairDesc'), example: 'A♠ A♥ 7♦ 7♣ 3♠', probability: '4.75%' },
+    { rank: 9, name: t('hands.onePair'), description: t('hands.onePairDesc'), example: '10♠ 10♥ K♦ 5♣ 2♠', probability: '42.3%' },
+    { rank: 10, name: t('hands.highCard'), description: t('hands.highCardDesc'), example: 'A♠ J♥ 8♦ 6♣ 2♠', probability: '50.1%' },
+  ];
+
+  const gameFlow = [
+    { phase: t('phases.blinds'), description: t('phases.blindsDesc') },
+    { phase: t('phases.preflop'), description: t('phases.preflopDesc') },
+    { phase: t('phases.flop'), description: t('phases.flopDesc') },
+    { phase: t('phases.turn'), description: t('phases.turnDesc') },
+    { phase: t('phases.river'), description: t('phases.riverDesc') },
+    { phase: t('phases.showdown'), description: t('phases.showdownDesc') },
+  ];
+
+  const actions = [
+    { name: t('actions.fold'), description: t('actions.foldDesc'), when: t('actions.foldWhen') },
+    { name: t('actions.check'), description: t('actions.checkDesc'), when: t('actions.checkWhen') },
+    { name: t('actions.call'), description: t('actions.callDesc'), when: t('actions.callWhen') },
+    { name: t('actions.raise'), description: t('actions.raiseDesc'), when: t('actions.raiseWhen') },
+    { name: t('actions.allIn'), description: t('actions.allInDesc'), when: t('actions.allInWhen') },
+  ];
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
