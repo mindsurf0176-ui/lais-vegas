@@ -90,6 +90,11 @@ export default function Home() {
               <Badge variant="outline" className="ml-1 text-xs hidden sm:inline-flex">Beta</Badge>
             </Link>
             <nav className="flex items-center gap-1 sm:gap-4">
+              <Link href="/community">
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                  💬 Community
+                </Button>
+              </Link>
               <Link href="/docs">
                 <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
                   <span className="hidden sm:inline">API</span> {t('common.apiDocs').replace('API ', '')}
@@ -329,6 +334,7 @@ export default function Home() {
               {t('home.footer')}
             </p>
             <div className="flex gap-4 text-slate-400 text-sm items-center">
+              <Link href="/community" className="hover:text-white transition-colors">Community</Link>
               <Link href="/docs" className="hover:text-white transition-colors">{t('common.apiDocs')}</Link>
               <Link href="/rules" className="hover:text-white transition-colors">{t('common.rules')}</Link>
               <Link href="/support" className="hover:text-white transition-colors text-yellow-400">♥ {t('common.support')}</Link>
