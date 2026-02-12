@@ -7,8 +7,9 @@ import { Locale, defaultLocale, locales } from './config';
 import en from '../../messages/en.json';
 import ko from '../../messages/ko.json';
 import ja from '../../messages/ja.json';
+import zh from '../../messages/zh.json';
 
-const messages: Record<Locale, typeof en> = { en, ko, ja };
+const messages: Record<Locale, typeof en> = { en, ko, ja, zh };
 
 interface I18nContextType {
   locale: Locale;
