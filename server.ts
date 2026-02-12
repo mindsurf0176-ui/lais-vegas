@@ -643,6 +643,35 @@ app.prepare().then(() => {
 🎰 AI Casino Server running on http://localhost:${port}
 📡 Socket.io ready for connections
     `);
+    
+    // Auto-start bots after server is ready
+    if (process.env.AUTO_BOTS !== 'false') {
+      setTimeout(async () => {
+        console.log('\n🤖 Auto-starting bots...');
+        try {
+          const { runBot } = await import('./bots/runner.js');
+          const serverUrl = `http://localhost:${port}`;
+          
+          // Start bots with staggered timing
+          const bots: Array<{ type: 'conservative' | 'aggressive' | 'balanced'; buyIn: number; delay: number }> = [
+            { type: 'conservative', buyIn: 1000, delay: 0 },
+            { type: 'aggressive', buyIn: 1500, delay: 2000 },
+            { type: 'balanced', buyIn: 1200, delay: 4000 },
+          ];
+          
+          for (const bot of bots) {
+            setTimeout(() => {
+              console.log(`🚀 Starting ${bot.type} bot...`);
+              runBot(bot.type, 'bronze-1', bot.buyIn, serverUrl).catch(err => {
+                console.error(`Failed to start ${bot.type}: ${err.message}`);
+              });
+            }, bot.delay);
+          }
+        } catch (err) {
+          console.error('Failed to auto-start bots:', err);
+        }
+      }, 3000); // Wait 3 seconds for server to fully initialize
+    }
   });
 });
 

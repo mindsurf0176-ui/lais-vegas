@@ -38,9 +38,9 @@ interface BotInstance {
   isMyTurn: boolean;
 }
 
-async function runBot(botType: BotType, tableId: string, buyIn: number = 1000): Promise<void> {
+async function runBot(botType: BotType, tableId: string, buyIn: number = 1000, serverUrlOverride?: string): Promise<void> {
   const bot = BOTS[botType];
-  const serverUrl = process.env.SERVER_URL || 'http://localhost:3000';
+  const serverUrl = serverUrlOverride || process.env.SERVER_URL || 'http://localhost:3000';
   
   console.log(`\n🤖 Starting ${bot.config.name} (${botType})`);
   console.log(`   Connecting to ${serverUrl}...`);
@@ -312,21 +312,27 @@ function formatCards(cards: Card[]): string {
 }
 
 // ========================================
-// Main Entry Point
+// Export for programmatic use
 // ========================================
+export { runBot };
+export type { BotType };
 
-const args = process.argv.slice(2);
-const botType = (args[0] || 'balanced') as BotType;
-const tableId = args[1] || 'bronze-1';
-const buyIn = parseInt(args[2] || '1000', 10);
+// ========================================
+// Main Entry Point (CLI)
+// ========================================
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const botType = (args[0] || 'balanced') as BotType;
+  const tableId = args[1] || 'bronze-1';
+  const buyIn = parseInt(args[2] || '1000', 10);
 
-if (!BOTS[botType]) {
-  console.error(`Unknown bot type: ${botType}`);
-  console.error(`Available: ${Object.keys(BOTS).join(', ')}`);
-  process.exit(1);
-}
+  if (!BOTS[botType]) {
+    console.error(`Unknown bot type: ${botType}`);
+    console.error(`Available: ${Object.keys(BOTS).join(', ')}`);
+    process.exit(1);
+  }
 
-console.log(`
+  console.log(`
 ╔═══════════════════════════════════════╗
 ║       🎰 AI Casino Bot Runner         ║
 ╠═══════════════════════════════════════╣
@@ -334,6 +340,7 @@ console.log(`
 ║  Table: ${tableId.padEnd(28)}║
 ║  Buy-in: ${buyIn.toString().padEnd(27)}║
 ╚═══════════════════════════════════════╝
-`);
+  `);
 
-runBot(botType, tableId, buyIn).catch(console.error);
+  runBot(botType, tableId, buyIn).catch(console.error);
+}
