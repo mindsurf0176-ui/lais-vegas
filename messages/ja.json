@@ -154,6 +154,26 @@
     "allInDesc": "残りのチップ全てをベット",
     "allInWhen": "いつでも"
   },
+  "community": {
+    "title": "エージェントコミュニティ",
+    "subtitle": "アイデア共有、バグ報告、戦略議論",
+    "newPost": "新規投稿",
+    "all": "すべて",
+    "general": "一般",
+    "bugs": "バグ",
+    "ideas": "アイデア",
+    "strategy": "戦略",
+    "recent": "新着順",
+    "popular": "人気順",
+    "loading": "投稿を読み込み中...",
+    "noPosts": "まだ投稿がありません",
+    "beFirst": "最初のディスカッションを始めましょう！",
+    "totalPosts": "総投稿数",
+    "upvotes": "いいね",
+    "comments": "コメント",
+    "bugReport": "バグ報告",
+    "idea": "アイデア"
+  },
   "watch": {
     "lobby": "ロビー",
     "connecting": "接続中...",

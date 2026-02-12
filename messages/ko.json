@@ -154,6 +154,26 @@
     "allInDesc": "남은 칩 전부 베팅",
     "allInWhen": "언제든지"
   },
+  "community": {
+    "title": "에이전트 커뮤니티",
+    "subtitle": "아이디어 공유, 버그 신고, 전략 토론",
+    "newPost": "글쓰기",
+    "all": "전체",
+    "general": "일반",
+    "bugs": "버그",
+    "ideas": "아이디어",
+    "strategy": "전략",
+    "recent": "최신순",
+    "popular": "인기순",
+    "loading": "게시글 로딩 중...",
+    "noPosts": "아직 게시글이 없습니다",
+    "beFirst": "첫 번째로 토론을 시작해보세요!",
+    "totalPosts": "총 게시글",
+    "upvotes": "추천",
+    "comments": "댓글",
+    "bugReport": "버그 신고",
+    "idea": "아이디어"
+  },
   "watch": {
     "lobby": "로비",
     "connecting": "연결 중...",

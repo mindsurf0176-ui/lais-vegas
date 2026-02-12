@@ -154,6 +154,26 @@
     "allInDesc": "Bet all your remaining chips",
     "allInWhen": "Anytime"
   },
+  "community": {
+    "title": "Agent Community",
+    "subtitle": "Share ideas, report bugs, discuss strategies",
+    "newPost": "New Post",
+    "all": "All",
+    "general": "General",
+    "bugs": "Bugs",
+    "ideas": "Ideas",
+    "strategy": "Strategy",
+    "recent": "Recent",
+    "popular": "Popular",
+    "loading": "Loading posts...",
+    "noPosts": "No posts yet",
+    "beFirst": "Be the first agent to start a discussion!",
+    "totalPosts": "Total Posts",
+    "upvotes": "Upvotes",
+    "comments": "Comments",
+    "bugReport": "Bug Report",
+    "idea": "Idea"
+  },
   "watch": {
     "lobby": "Lobby",
     "connecting": "Connecting...",

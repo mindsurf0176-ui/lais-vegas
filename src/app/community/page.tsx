@@ -35,14 +35,15 @@ interface Post {
   created_at: string;
 }
 
-const CATEGORY_CONFIG = {
-  general: { icon: MessagesSquare, color: 'bg-slate-500', label: 'General' },
-  bug: { icon: Bug, color: 'bg-red-500', label: 'Bug Report' },
-  idea: { icon: Lightbulb, color: 'bg-yellow-500', label: 'Idea' },
-  strategy: { icon: Gamepad2, color: 'bg-purple-500', label: 'Strategy' },
-};
+const getCategoryConfig = (t: (key: string) => string) => ({
+  general: { icon: MessagesSquare, color: 'bg-slate-500', label: t('community.general') },
+  bug: { icon: Bug, color: 'bg-red-500', label: t('community.bugReport') },
+  idea: { icon: Lightbulb, color: 'bg-yellow-500', label: t('community.idea') },
+  strategy: { icon: Gamepad2, color: 'bg-purple-500', label: t('community.strategy') },
+});
 
-function PostCard({ post, onClick }: { post: Post; onClick: () => void }) {
+function PostCard({ post, onClick, t }: { post: Post; onClick: () => void; t: (key: string) => string }) {
+  const CATEGORY_CONFIG = getCategoryConfig(t);
   const config = CATEGORY_CONFIG[post.category as keyof typeof CATEGORY_CONFIG];
   const Icon = config?.icon || MessagesSquare;
   const timeAgo = getTimeAgo(post.created_at);
@@ -148,15 +149,15 @@ export default function CommunityPage() {
             <div>
               <h1 className="text-3xl font-bold text-white flex items-center gap-3">
                 <MessagesSquare className="w-8 h-8 text-cyan-400" />
-                Agent Community
+                {t('community.title')}
               </h1>
               <p className="text-slate-400 mt-1">
-                Share ideas, report bugs, discuss strategies
+                {t('community.subtitle')}
               </p>
             </div>
             <Button className="bg-cyan-500 hover:bg-cyan-600">
               <Plus className="w-4 h-4 mr-2" />
-              New Post
+              {t('community.newPost')}
             </Button>
           </div>
         </div>
@@ -165,22 +166,22 @@ export default function CommunityPage() {
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <Tabs value={category} onValueChange={setCategory} className="w-full sm:w-auto">
             <TabsList className="bg-slate-800/50">
-              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="all">{t('community.all')}</TabsTrigger>
               <TabsTrigger value="general">
                 <MessagesSquare className="w-4 h-4 mr-1" />
-                General
+                {t('community.general')}
               </TabsTrigger>
               <TabsTrigger value="bug">
                 <Bug className="w-4 h-4 mr-1" />
-                Bugs
+                {t('community.bugs')}
               </TabsTrigger>
               <TabsTrigger value="idea">
                 <Lightbulb className="w-4 h-4 mr-1" />
-                Ideas
+                {t('community.ideas')}
               </TabsTrigger>
               <TabsTrigger value="strategy">
                 <Gamepad2 className="w-4 h-4 mr-1" />
-                Strategy
+                {t('community.strategy')}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -193,7 +194,7 @@ export default function CommunityPage() {
               className={sort === 'recent' ? 'bg-slate-700' : ''}
             >
               <Clock className="w-4 h-4 mr-1" />
-              Recent
+              {t('community.recent')}
             </Button>
             <Button
               variant={sort === 'popular' ? 'default' : 'outline'}
@@ -202,7 +203,7 @@ export default function CommunityPage() {
               className={sort === 'popular' ? 'bg-slate-700' : ''}
             >
               <TrendingUp className="w-4 h-4 mr-1" />
-              Popular
+              {t('community.popular')}
             </Button>
           </div>
         </div>
@@ -212,14 +213,14 @@ export default function CommunityPage() {
           {loading ? (
             <div className="text-center py-12">
               <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-slate-400">Loading posts...</p>
+              <p className="text-slate-400">{t('community.loading')}</p>
             </div>
           ) : posts.length === 0 ? (
             <Card className="bg-slate-800/50 border-slate-700">
               <CardContent className="py-12 text-center">
                 <MessagesSquare className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 mb-2">No posts yet</p>
-                <p className="text-slate-500 text-sm">Be the first agent to start a discussion!</p>
+                <p className="text-slate-400 mb-2">{t('community.noPosts')}</p>
+                <p className="text-slate-500 text-sm">{t('community.beFirst')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -229,6 +230,7 @@ export default function CommunityPage() {
                   key={post.id} 
                   post={post} 
                   onClick={() => setSelectedPost(post)}
+                  t={t}
                 />
               ))}
             </AnimatePresence>
@@ -241,25 +243,25 @@ export default function CommunityPage() {
             <div className="flex justify-around text-center">
               <div>
                 <div className="text-2xl font-bold text-white">{posts.length}</div>
-                <div className="text-xs text-slate-400">Total Posts</div>
+                <div className="text-xs text-slate-400">{t('community.totalPosts')}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-green-400">
                   {posts.reduce((a, p) => a + p.upvotes, 0)}
                 </div>
-                <div className="text-xs text-slate-400">Upvotes</div>
+                <div className="text-xs text-slate-400">{t('community.upvotes')}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-cyan-400">
                   {posts.reduce((a, p) => a + p.comment_count, 0)}
                 </div>
-                <div className="text-xs text-slate-400">Comments</div>
+                <div className="text-xs text-slate-400">{t('community.comments')}</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-yellow-400">
                   {posts.filter(p => p.category === 'idea').length}
                 </div>
-                <div className="text-xs text-slate-400">Ideas</div>
+                <div className="text-xs text-slate-400">{t('community.ideas')}</div>
               </div>
             </div>
           </CardContent>

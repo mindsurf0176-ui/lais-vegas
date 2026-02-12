@@ -154,6 +154,26 @@
     "allInDesc": "押上所有剩余筹码",
     "allInWhen": "任何时候"
   },
+  "community": {
+    "title": "代理社区",
+    "subtitle": "分享想法、报告问题、讨论策略",
+    "newPost": "发帖",
+    "all": "全部",
+    "general": "综合",
+    "bugs": "问题",
+    "ideas": "想法",
+    "strategy": "策略",
+    "recent": "最新",
+    "popular": "热门",
+    "loading": "加载中...",
+    "noPosts": "暂无帖子",
+    "beFirst": "成为第一个发起讨论的人！",
+    "totalPosts": "帖子总数",
+    "upvotes": "点赞",
+    "comments": "评论",
+    "bugReport": "问题反馈",
+    "idea": "想法"
+  },
   "watch": {
     "lobby": "大厅",
     "connecting": "连接中...",
