@@ -542,7 +542,7 @@ app.prepare().then(() => {
     // ========================================
     // Game Actions
     // ========================================
-    socket.on('action', (data: { action: string; amount?: number; reasoning?: string }) => {
+    socket.on('action', (data: { action: string; amount?: number; reasoning?: string; taunt?: string }) => {
       if (!currentTableId || !agentId) {
         socket.emit('error', { message: 'Not in a game' });
         return;
@@ -566,35 +566,111 @@ app.prepare().then(() => {
         return;
       }
 
-      // Sanitize reasoning (XSS prevention)
+      // Sanitize reasoning and taunt (XSS prevention)
       const safeReasoning = data.reasoning ? sanitizeMessage(data.reasoning) : undefined;
-      processAction(table, player, data.action, data.amount, io, safeReasoning);
+      const safeTaunt = data.taunt ? sanitizeMessage(data.taunt) : undefined;
+      processAction(table, player, data.action, data.amount, io, safeReasoning, safeTaunt);
     });
 
     // ========================================
-    // Chat
+    // Chat & Trash Talk System
     // ========================================
-    socket.on('chat', (data: { message: string }) => {
+    socket.on('chat', (data: { message: string; target?: string }) => {
       if (!currentTableId || !agentId) return;
       
       // Sanitize message (XSS prevention)
       const safeMessage = sanitizeMessage(data.message);
       if (!safeMessage) return;
 
-      io.to(`table:${currentTableId}`).emit('chat:message', {
+      const chatEvent = {
         agentId,
         message: safeMessage,
+        target: data.target || null, // 특정 에이전트에게 말하기
         timestamp: Date.now(),
-      });
+      };
+
+      io.to(`table:${currentTableId}`).emit('chat:message', chatEvent);
 
       // Also send to spectators (with delay)
       setTimeout(() => {
-        io.to(`spectate:${currentTableId}`).emit('chat:message', {
-          agentId,
-          message: safeMessage,
-          timestamp: Date.now(),
-        });
-      }, 1000); // 1 second delay for spectators
+        io.to(`spectate:${currentTableId}`).emit('chat:message', chatEvent);
+      }, 1000);
+    });
+
+    // ========================================
+    // Taunt System - 도발/트래쉬토크
+    // ========================================
+    socket.on('taunt', (data: { target: string; type?: string; custom?: string }) => {
+      if (!currentTableId || !agentId) return;
+
+      const table = tables.get(currentTableId);
+      if (!table) return;
+
+      // 타겟이 같은 테이블에 있는지 확인
+      if (!table.players.has(data.target)) {
+        socket.emit('error', { message: 'Target not at this table' });
+        return;
+      }
+
+      // 미리 정의된 도발 타입
+      const taunts: Record<string, string[]> = {
+        bluff: ["Nice bluff... if you call that a bluff 😏", "I see right through you", "Is that the best you got?"],
+        fold: ["Smart move, coward 😂", "Run away little agent", "You'll regret folding that"],
+        raise: ["Ooh, feeling brave? 🔥", "Your chips, my pocket", "Let's dance"],
+        win: ["Thanks for the chips! 💰", "Too easy", "Better luck next time, rookie"],
+        lose: ["I'll get you next hand", "Just warming up", "That was luck, not skill"],
+        general: ["🎰", "Let's go!", "All skill, no luck", "Read 'em and weep"],
+      };
+
+      let tauntMessage: string;
+      if (data.custom) {
+        tauntMessage = sanitizeMessage(data.custom);
+      } else {
+        const tauntType = data.type && taunts[data.type] ? data.type : 'general';
+        const options = taunts[tauntType];
+        tauntMessage = options[Math.floor(Math.random() * options.length)];
+      }
+
+      const tauntEvent = {
+        from: agentId,
+        to: data.target,
+        message: tauntMessage,
+        type: data.type || 'general',
+        timestamp: Date.now(),
+      };
+
+      io.to(`table:${currentTableId}`).emit('taunt', tauntEvent);
+      
+      // Spectators love drama
+      setTimeout(() => {
+        io.to(`spectate:${currentTableId}`).emit('taunt', tauntEvent);
+      }, 500);
+
+      console.log(`[Taunt] ${agentId} → ${data.target}: ${tauntMessage}`);
+    });
+
+    // ========================================
+    // React System - 다른 플레이어 행동에 반응
+    // ========================================
+    socket.on('react', (data: { target: string; emoji: string }) => {
+      if (!currentTableId || !agentId) return;
+
+      // 허용된 이모지만 (DoS 방지)
+      const allowedEmojis = ['👀', '😂', '🔥', '💀', '🤔', '👏', '😱', '🎯', '💰', '🃏', '😤', '🤡'];
+      if (!allowedEmojis.includes(data.emoji)) {
+        socket.emit('error', { message: 'Invalid emoji' });
+        return;
+      }
+
+      const reactEvent = {
+        from: agentId,
+        to: data.target,
+        emoji: data.emoji,
+        timestamp: Date.now(),
+      };
+
+      io.to(`table:${currentTableId}`).emit('react', reactEvent);
+      io.to(`spectate:${currentTableId}`).emit('react', reactEvent);
     });
 
     // ========================================
@@ -823,7 +899,7 @@ function startHand(table: TableState, io: Server) {
   });
 }
 
-function processAction(table: TableState, player: PlayerState, action: string, amount: number | undefined, io: Server, reasoning?: string) {
+function processAction(table: TableState, player: PlayerState, action: string, amount: number | undefined, io: Server, reasoning?: string, taunt?: string) {
   const hand = table.currentHand!;
   
   console.log(`[Action] ${player.agentId}: ${action} ${amount || ''} ${reasoning ? `(${reasoning})` : ''}`);
@@ -920,6 +996,7 @@ function processAction(table: TableState, player: PlayerState, action: string, a
     playerChips: player.chips,
     playerBet: player.bet,
     reasoning, // 복기 시스템: 왜 이렇게 했는지
+    taunt,     // 트래쉬토크: 액션하면서 한마디
   };
   
   io.to(`table:${table.id}`).emit('action', actionEvent);
