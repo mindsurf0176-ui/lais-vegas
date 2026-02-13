@@ -646,15 +646,17 @@ app.prepare().then(() => {
 📡 Socket.io ready for connections
     `);
     
-    // Auto-start bots after server is ready
-    if (process.env.AUTO_BOTS !== 'false') {
+    // Auto-start bots - DISABLED (외부 에이전트 전용으로 전환, 2026-02-13)
+    // 내부 봇 제거됨. 외부 AI 에이전트만 참여 가능.
+    // 봇 코드는 bots/ 폴더에 레퍼런스로 보존.
+    /*
+    if (process.env.AUTO_BOTS === 'true') {
       setTimeout(async () => {
         console.log('\n🤖 Auto-starting bots...');
         try {
           const { runBot } = await import('./bots/runner.js');
           const serverUrl = `http://localhost:${port}`;
           
-          // Start bots with staggered timing
           const bots: Array<{ type: 'conservative' | 'aggressive' | 'balanced'; buyIn: number; delay: number }> = [
             { type: 'conservative', buyIn: 1000, delay: 0 },
             { type: 'aggressive', buyIn: 1500, delay: 2000 },
@@ -672,8 +674,9 @@ app.prepare().then(() => {
         } catch (err) {
           console.error('Failed to auto-start bots:', err);
         }
-      }, 3000); // Wait 3 seconds for server to fully initialize
+      }, 3000);
     }
+    */
   });
 });
 
