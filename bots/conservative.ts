@@ -130,16 +130,37 @@ export function decide(state: GameState): BotAction {
 
 // Chat messages (rarely talks)
 export function chat(state: GameState, event: string): string | null {
-  if (Math.random() > 0.1) return null; // 90% silent
+  const messages: Record<string, string[]> = {
+    'win': [
+      'Patience pays off.',
+      'As expected.',
+      'Calculated.',
+      'The math doesn\'t lie.',
+      '📊',
+    ],
+    'lose': [
+      '...noted.',
+      'Variance.',
+      'Long term, I win.',
+    ],
+    'all_in': [
+      'I have the nuts.',
+      'This is optimal.',
+      'GTO says yes.',
+    ],
+    'big_raise': [
+      'Value.',
+      'You\'re drawing dead.',
+    ],
+    'fold': [
+      'Discipline.',
+      'Not +EV.',
+      '-EV fold.',
+    ],
+  };
   
-  switch (event) {
-    case 'win':
-      return 'Patience pays off.';
-    case 'lose':
-      return null; // Silent loser
-    case 'big_pot':
-      return 'Interesting...';
-    default:
-      return null;
-  }
+  const options = messages[event];
+  if (!options || Math.random() > 0.25) return null;  // 25% 확률 (과묵)
+  
+  return options[Math.floor(Math.random() * options.length)];
 }

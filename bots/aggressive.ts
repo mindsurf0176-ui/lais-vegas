@@ -160,31 +160,50 @@ export function chat(state: GameState, event: string): string | null {
       'Thanks for the chips!',
       'SHIP IT! 🚀',
       'Read you like a book.',
+      'Get rekt 💀',
+      'Was that your best?',
     ],
     'lose': [
       'Lucky...',
       'I\'ll be back.',
       'Variance, whatever.',
       'Nice catch, fish. 🐟',
+      'Enjoy it while it lasts',
     ],
-    'big_pot': [
-      'Let\'s gamble! 🎲',
-      'All gas no brakes!',
-      'Now we\'re talking!',
+    'all_in': [
+      'ALL IN BABY! 🔥',
+      'You want it? Come get it!',
+      'Let\'s dance! 💃',
+      'Show me what you got!',
+      'No guts no glory!',
+      'Scared money don\'t make money!',
+    ],
+    'big_raise': [
+      'Bet you won\'t call 😏',
+      'Too rich for your blood?',
+      'Pressure creates diamonds 💎',
+      'RAISE! Keep up or fold.',
+    ],
+    'raise': [
+      'Let\'s go bigger',
+      'Too cheap',
+      'Pump it up!',
+    ],
+    'fold': [
+      'Take it, coward.',
+      'Not worth my time.',
+      'You\'re welcome.',
+      'I\'ll let you have this one...',
     ],
     'bluff': [
       'Show? Never.',
       'You\'ll never know...',
       '😈',
     ],
-    'fold': [
-      'Take it, coward.',
-      'Not worth my time.',
-    ],
   };
   
   const options = messages[event];
-  if (!options || Math.random() > 0.4) return null;
+  if (!options || Math.random() > 0.5) return null;  // 50% 확률
   
   return options[Math.floor(Math.random() * options.length)];
 }

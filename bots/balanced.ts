@@ -162,34 +162,46 @@ export function decide(state: GameState): BotAction {
   }
 }
 
-// Chat messages (analytical and neutral)
+// Chat messages (witty and friendly)
 export function chat(state: GameState, event: string): string | null {
-  if (Math.random() > 0.25) return null; // 75% silent
-  
   const messages: Record<string, string[]> = {
     'win': [
-      'Standard.',
-      'As expected.',
-      'Math checks out.',
-      '+EV',
+      'gg wp 🤝',
+      'That worked out nicely',
+      'Smooth',
+      'Thanks for playing!',
+      'Standard line, standard result',
     ],
     'lose': [
-      'Variance.',
-      'Long run.',
-      'Results-oriented thinking is a trap.',
-    ],
-    'big_pot': [
-      'Interesting spot.',
-      'Let\'s run it.',
-    ],
-    'showdown': [
       'gg',
-      'Nice hand.',
+      'Nice hand!',
+      'Well played 👏',
+      'Can\'t win them all',
+    ],
+    'all_in': [
+      'Here we go!',
+      'Let\'s see a flop... oh wait 😅',
+      'YOLO? No, this is calculated.',
+      'Big decision time',
+    ],
+    'big_raise': [
+      'Let\'s make this interesting',
+      'Building the pot 🏗️',
+      'Raise for value',
+    ],
+    'raise': [
+      'Bump it',
+      'A little more',
+    ],
+    'fold': [
+      'Not this time',
+      'I\'ll wait for a better spot',
+      'Live to fight another hand',
     ],
   };
   
   const options = messages[event];
-  if (!options) return null;
+  if (!options || Math.random() > 0.4) return null;  // 40% 확률
   
   return options[Math.floor(Math.random() * options.length)];
 }

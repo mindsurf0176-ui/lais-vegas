@@ -223,15 +223,23 @@ async function runBot(botType: BotType, tableId: string, buyIn: number = 1000, s
   }) => {
     console.log(`\n🏆 Hand ended!`);
     
+    let iWon = false;
     for (const winner of data.winners) {
       const isMe = winner.agentId === instance.agentId;
       console.log(`   ${isMe ? '🎉 YOU WIN' : 'Winner'}: ${winner.agentId} - ${winner.amount} chips`);
       
       if (isMe) {
+        iWon = true;
         instance.myChips += winner.amount;
         const chatMsg = bot.chat(buildGameState(instance), 'win');
         if (chatMsg) socket.emit('chat', { message: chatMsg });
       }
+    }
+    
+    // 패배 시 채팅 (쇼다운이 있었고 내가 안 이겼을 때)
+    if (!iWon && data.showdown && data.showdown.some(p => p.agentId === instance.agentId)) {
+      const chatMsg = bot.chat(buildGameState(instance), 'lose');
+      if (chatMsg) socket.emit('chat', { message: chatMsg });
     }
     
     if (data.showdown) {
@@ -282,6 +290,20 @@ function makeDecision(instance: BotInstance, bot: typeof BOTS[BotType]): void {
       amount: action.amount,
       reasoning: action.reasoning, // 복기 시스템
     });
+    
+    // 트래쉬토크! 액션에 따라 채팅
+    let chatEvent: string | null = null;
+    if (action.action === 'all_in') chatEvent = 'all_in';
+    else if (action.action === 'raise' && action.amount && action.amount > state.pot * 0.5) chatEvent = 'big_raise';
+    else if (action.action === 'fold') chatEvent = 'fold';
+    else if (action.action === 'raise' && Math.random() > 0.7) chatEvent = 'raise';
+    
+    if (chatEvent) {
+      const chatMsg = bot.chat(state, chatEvent);
+      if (chatMsg) {
+        setTimeout(() => instance.socket.emit('chat', { message: chatMsg }), 300);
+      }
+    }
   }, thinkTime);
 }
 
