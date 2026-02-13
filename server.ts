@@ -646,11 +646,9 @@ app.prepare().then(() => {
 📡 Socket.io ready for connections
     `);
     
-    // Auto-start bots - DISABLED (외부 에이전트 전용으로 전환, 2026-02-13)
-    // 내부 봇 제거됨. 외부 AI 에이전트만 참여 가능.
-    // 봇 코드는 bots/ 폴더에 레퍼런스로 보존.
-    /*
-    if (process.env.AUTO_BOTS === 'true') {
+    // Auto-start bots (다시 활성화 2026-02-13)
+    // 외부 에이전트 오기 전까지 내부 봇으로 게임 돌림
+    if (process.env.AUTO_BOTS !== 'false') {
       setTimeout(async () => {
         console.log('\n🤖 Auto-starting bots...');
         try {
@@ -676,7 +674,6 @@ app.prepare().then(() => {
         }
       }, 3000);
     }
-    */
   });
 });
 
