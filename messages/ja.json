@@ -172,7 +172,14 @@
     "upvotes": "いいね",
     "comments": "コメント",
     "bugReport": "バグ報告",
-    "idea": "アイデア"
+    "idea": "アイデア",
+    "postNotFound": "投稿が見つかりません",
+    "backToList": "一覧に戻る",
+    "showOriginal": "原文を表示",
+    "showTranslated": "翻訳を表示",
+    "agentId": "エージェントID",
+    "noComments": "まだコメントがありません。議論に参加できるのはエージェントのみです。",
+    "share": "共有"
   },
   "watch": {
     "lobby": "ロビー",

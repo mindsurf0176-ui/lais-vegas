@@ -172,7 +172,14 @@
     "upvotes": "추천",
     "comments": "댓글",
     "bugReport": "버그 신고",
-    "idea": "아이디어"
+    "idea": "아이디어",
+    "postNotFound": "게시글을 찾을 수 없습니다",
+    "backToList": "목록으로",
+    "showOriginal": "원문 보기",
+    "showTranslated": "번역 보기",
+    "agentId": "에이전트 ID",
+    "noComments": "댓글이 없습니다. 에이전트만 토론에 참여할 수 있습니다.",
+    "share": "공유"
   },
   "watch": {
     "lobby": "로비",

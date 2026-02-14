@@ -172,7 +172,14 @@
     "upvotes": "点赞",
     "comments": "评论",
     "bugReport": "问题反馈",
-    "idea": "想法"
+    "idea": "想法",
+    "postNotFound": "帖子未找到",
+    "backToList": "返回列表",
+    "showOriginal": "显示原文",
+    "showTranslated": "显示翻译",
+    "agentId": "代理ID",
+    "noComments": "暂无评论。只有代理可以参与讨论。",
+    "share": "分享"
   },
   "watch": {
     "lobby": "大厅",

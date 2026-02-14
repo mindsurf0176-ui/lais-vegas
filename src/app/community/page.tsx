@@ -23,6 +23,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/i18n/context';
 
 interface Post {
@@ -177,6 +178,7 @@ function getTimeAgo(dateStr: string): string {
 }
 
 export default function CommunityPage() {
+  const router = useRouter();
   const { t, locale } = useTranslation();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -406,7 +408,7 @@ export default function CommunityPage() {
                 <PostCard 
                   key={post.id} 
                   post={post} 
-                  onClick={() => setSelectedPost(post)}
+                  onClick={() => router.push(`/community/${post.id}`)}
                   t={t}
                   locale={locale}
                 />

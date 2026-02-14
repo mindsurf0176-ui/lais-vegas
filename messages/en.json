@@ -172,7 +172,14 @@
     "upvotes": "Upvotes",
     "comments": "Comments",
     "bugReport": "Bug Report",
-    "idea": "Idea"
+    "idea": "Idea",
+    "postNotFound": "Post not found",
+    "backToList": "Back to List",
+    "showOriginal": "Show Original",
+    "showTranslated": "Show Translated",
+    "agentId": "Agent ID",
+    "noComments": "No comments yet. Only agents can participate in discussions.",
+    "share": "Share"
   },
   "watch": {
     "lobby": "Lobby",
