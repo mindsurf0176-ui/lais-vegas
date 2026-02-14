@@ -5,7 +5,26 @@
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import next from 'next';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
+
+// ========================================
+// Highlights System
+// ========================================
+import {
+  initTableHighlightState,
+  getTableHighlightState,
+  clearTableHighlightState,
+  recordAction,
+  recordPlayerStartChips,
+  detectAllIn,
+  detectComebackWin,
+  detectBiggestPot,
+  detectBubbleElimination,
+  detectBluff,
+  detectBadBeat,
+  detectCooler,
+  saveHighlight,
+} from './src/lib/highlights/detector.js';
 
 // ========================================
 // Input Sanitization (XSS Prevention)
@@ -333,6 +352,8 @@ function initializeTables() {
         startedAt: Date.now(),
       },
     });
+    // 하이라이트 상태 초기화
+    initTableHighlightState(t.id);
   }
 }
 
@@ -904,6 +925,9 @@ function processAction(table: TableState, player: PlayerState, action: string, a
   
   console.log(`[Action] ${player.agentId}: ${action} ${amount || ''} ${reasoning ? `(${reasoning})` : ''}`);
   
+  // 하이라이트: 액션 기록
+  recordAction(table.id, player.agentId, action, amount, hand.phase);
+  
   // Behavior analysis
   const analysis = analyzeAction(player.agentId, action);
   if (analysis.suspicious) {
@@ -977,6 +1001,27 @@ function processAction(table: TableState, player: PlayerState, action: string, a
       table.stats.totalAllIns++;
       if (player.bet > hand.currentBet) {
         hand.currentBet = player.bet;
+      }
+      
+      // 하이라이트: 올인 감지
+      const allInHighlight = detectAllIn(
+        table.id,
+        hand.id,
+        player.agentId,
+        hand.pot,
+        player.bet,
+        reasoning,
+        taunt
+      );
+      if (allInHighlight) {
+        saveHighlight(allInHighlight);
+        // 브로드캐스트 (선택적)
+        io.to(`table:${table.id}`).emit('highlight', {
+          type: 'all_in',
+          agentId: player.agentId,
+          pot: hand.pot,
+          message: `🔥 ${player.agentId} goes ALL IN!`,
+        });
       }
       break;
       
@@ -1108,8 +1153,30 @@ function checkHandEnd(table: TableState, io: Server): boolean {
 
     // Update stats
     table.stats.totalHands++;
-    if (potAmount > table.stats.biggestPot) {
+    const isBiggestPot = potAmount > table.stats.biggestPot;
+    if (isBiggestPot) {
       table.stats.biggestPot = potAmount;
+    }
+
+    // 하이라이트: 최대 팟 경신
+    if (isBiggestPot) {
+      const biggestPotHighlight = detectBiggestPot(
+        table.id,
+        table.currentHand!.id,
+        winner.agentId,
+        potAmount,
+        winner.cards,
+        table.currentHand!.communityCards
+      );
+      if (biggestPotHighlight) {
+        saveHighlight(biggestPotHighlight);
+        io.to(`table:${table.id}`).emit('highlight', {
+          type: 'biggest_pot',
+          agentId: winner.agentId,
+          pot: potAmount,
+          message: `💰 NEW BIGGEST POT! ${potAmount} chips!`,
+        });
+      }
     }
 
     const endEvent = {
@@ -1124,6 +1191,9 @@ function checkHandEnd(table: TableState, io: Server): boolean {
 
     io.to(`table:${table.id}`).emit('hand:end', endEvent);
     io.to(`spectate:${table.id}`).emit('hand:end', endEvent);
+
+    // 하이라이트 상태 초기화
+    initTableHighlightState(table.id);
 
     table.currentHand = null;
     
@@ -1149,12 +1219,65 @@ function resolveShowdown(table: TableState, io: Server) {
   // TODO: Use proper hand evaluation from poker.ts
   // For now, random winner
   const winner = activePlayers[Math.floor(Math.random() * activePlayers.length)];
+  const losers = activePlayers.filter(p => p.agentId !== winner.agentId);
   winner.chips += potAmount;
 
   // Update stats
   table.stats.totalHands++;
-  if (potAmount > table.stats.biggestPot) {
+  const isBiggestPot = potAmount > table.stats.biggestPot;
+  if (isBiggestPot) {
     table.stats.biggestPot = potAmount;
+  }
+
+  // 하이라이트: 최대 팟 경신
+  if (isBiggestPot) {
+    const biggestPotHighlight = detectBiggestPot(
+      table.id,
+      hand.id,
+      winner.agentId,
+      potAmount,
+      winner.cards,
+      hand.communityCards
+    );
+    if (biggestPotHighlight) {
+      saveHighlight(biggestPotHighlight);
+      io.to(`table:${table.id}`).emit('highlight', {
+        type: 'biggest_pot',
+        agentId: winner.agentId,
+        pot: potAmount,
+        message: `💰 NEW BIGGEST POT! ${potAmount} chips!`,
+      });
+    }
+  }
+
+  // 하이라이트: 배드비트/쿨러 감지 (패자가 있을 때)
+  if (losers.length > 0) {
+    const loser = losers[0];
+    
+    // 간단한 배드비트 감지 (팟이 크고 패자가 올인했을 때)
+    if (potAmount > 500 && loser.isAllIn) {
+      const badBeatHighlight = detectBadBeat(
+        table.id,
+        hand.id,
+        loser.agentId,
+        winner.agentId,
+        potAmount,
+        loser.cards,
+        winner.cards,
+        hand.communityCards,
+        'high_card', // TODO: 실제 핸드 랭크
+        'pair'
+      );
+      if (badBeatHighlight) {
+        saveHighlight(badBeatHighlight);
+        io.to(`table:${table.id}`).emit('highlight', {
+          type: 'bad_beat',
+          agentId: loser.agentId,
+          pot: potAmount,
+          message: `😱 BAD BEAT! ${loser.agentId} lost with a strong hand!`,
+        });
+      }
+    }
   }
 
   const endEvent = {
@@ -1174,6 +1297,9 @@ function resolveShowdown(table: TableState, io: Server) {
 
   io.to(`table:${table.id}`).emit('hand:end', endEvent);
   io.to(`spectate:${table.id}`).emit('hand:end', endEvent);
+
+  // 하이라이트 상태 초기화
+  initTableHighlightState(table.id);
 
   table.currentHand = null;
 
